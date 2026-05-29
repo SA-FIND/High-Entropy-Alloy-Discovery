@@ -29,3 +29,6 @@ debug_pw.py
 take_screenshot.py
 debug_dom.js
 *.png
+
+# Node
+node_modules/
