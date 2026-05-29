@@ -401,9 +401,9 @@
 
         function renderTabs() {
             if (!tabsContainer) return;
-            tabsContainer.innerHTML = Object.keys(ALLOY_FAMILIES).map(cat => 
-                <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" 
-                        onclick="switchCategory('${cat}')">
+            tabsContainer.innerHTML = Object.keys(ALLOY_FAMILIES).map(cat =>
+                <button class="tab-btn ${cat === currentCategory ? 'active' : ''}"
+                    onclick="switchCategory('${cat}')">
                     ${cat}
                 </button>
             ).join('');
@@ -418,7 +418,7 @@
         }
 
         function initUI() {
-            container.innerHTML = elements.map(el => 
+            container.innerHTML = elements.map(el =>
                 <div class="slider-group">
                     <div class="slider-header">
                         <div class="el-label">
@@ -436,16 +436,16 @@
 
             elements.forEach(el => {
                 const numInput = document.getElementById(
-um-${el.sym});
+                    um - ${ el.sym });
                 const rangeInput = document.getElementById(
-ange-${el.sym});
+                    ange - ${ el.sym });
 
                 const update = (val) => {
                     let parsed = parseInt(val, 10);
                     if (isNaN(parsed)) parsed = 0;
                     if (parsed < 0) parsed = 0;
                     if (parsed > 100) parsed = 100;
-                    
+
                     state[el.sym] = parsed;
                     numInput.value = parsed;
                     rangeInput.value = parsed;
@@ -468,21 +468,21 @@ ange-${el.sym});
             let svgContent = '';
             let legendContent = '';
             let cumulative = 0;
-            
+
             elements.forEach(el => {
                 const pct = resultsComp[el.sym] || 0;
                 if (pct > 0) {
-                    const dasharray = ${pct} 100;
+                    const dasharray = ${ pct } 100;
                     const dashoffset = -cumulative;
-                    svgContent += <circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke=$"{el.color}" stroke-width="6" stroke-dasharray=$"{dasharray}" stroke-dashoffset=$"{dashoffset}"></circle>;
+                    svgContent += <circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke=$"{el.color}" stroke - width="6" stroke - dasharray=$"{dasharray}" stroke - dashoffset=$"{dashoffset}" ></circle >;
                     cumulative += pct;
 
-                    legendContent += 
+                    legendContent +=
                         <div class="legend-item">
                             <div class="el-dot" style="background-color: ${el.color}"></div>
                             ${el.sym} ${pct.toFixed(1)}%
                         </div>
-                    ;
+                        ;
                 }
             });
 
@@ -499,17 +499,17 @@ ange-${el.sym});
                     body: JSON.stringify(state)
                 });
                 const data = await res.json();
-                
+
                 document.getElementById('val-density').innerText = data.density;
                 document.getElementById('val-strength').innerText = data.strength;
                 document.getElementById('val-score').innerText = data.score;
-                
+
                 resultsComp = data.composition;
-                
+
                 // Update normalized labels
                 elements.forEach(el => {
                     const normEl = document.getElementById(
-orm-${el.sym});
+                        orm - ${ el.sym });
                     if (normEl) {
                         normEl.innerText = (resultsComp[el.sym] || 0).toFixed(1) + '%';
                     }
