@@ -23,14 +23,14 @@ An end-to-end computational materials science pipeline for discovering optimal H
 
 **Try the app now →** [metaforge-web.onrender.com](https://metaforge-web.onrender.com/)
 
-> **Note:** The free-tier server sleeps after 15 minutes of inactivity. The first visit may take ~1 minute to wake up while it loads the ML models. Subsequent requests are instant.
+> **Note:** The first visit may take ~1 minute to wake up while it loads the ML models. Subsequent requests are instant.
 
 ---
 
 ## Core Features
 
 > **Combinatorial Engine**<br>
-> Generates thousands of theoretical alloy compositions and filters them using physics-based stability rules (lattice strain δ, VEC thresholds).
+> Generates thousands of theoretical alloy compositions (`2229) and filters them using physics-based stability rules (lattice strain δ, VEC thresholds).
 
 > **ML Property Prediction**<br>
 > Trains RandomForest models on 132 Matminer Magpie descriptors to predict density and shear strength from composition.
