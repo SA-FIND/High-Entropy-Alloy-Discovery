@@ -132,7 +132,7 @@ cd MetaForge-Web
 This project is open-source under the MIT License.
 
 Special thanks to the foundational work by:
-- **Materials Project** — Jain et al., APL Materials, 2013
-- **Matminer** — Ward et al., Comput. Mater. Sci., 2018
-- **CHGNet** — Deng et al., Nature Machine Intelligence, 2023
-- **Pymatgen** — Ong et al., Comput. Mater. Sci., 2013
+- **Materials Project**, Jain et al., APL Materials, 2013
+- **Matminer**, Ward et al., Comput. Mater. Sci., 2018
+- **CHGNet**, Deng et al., Nature Machine Intelligence, 2023
+- **Pymatgen**, Ong et al., Comput. Mater. Sci., 2013
