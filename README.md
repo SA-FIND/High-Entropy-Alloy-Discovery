@@ -1,7 +1,7 @@
 <div align="center">
 
 # MetaForge
-**AI-Powered High Entropy Alloy Discovery**
+**ML-Powered High Entropy Alloy Discovery**
 
 [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask 3.1.3](https://img.shields.io/badge/Flask-3.1.3-black?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
@@ -9,7 +9,7 @@
 [![Materials Project](https://img.shields.io/badge/Materials%20Project-API-00c853?style=flat-square)](https://materialsproject.org/)
 [![CHGNet](https://img.shields.io/badge/CHGNet-GNN-ff6f00?style=flat-square)](https://github.com/CederGroupHub/chgnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-An end-to-end computational materials science pipeline for discovering optimal High Entropy Alloys (HEAs) for diverse applications including aerospace, corrosion resistance, refractory, and lightweight structural purposes. Combines data harvesting from the Materials Project, physics-informed machine learning, genetic algorithm-driven inverse design, and ML interatomic potential relaxation.
+An end-to-end computational materials science pipeline for discovering optimal High Entropy Alloys (HEAs) for diverse applications including aerospace, corrosion resistance, refractory, and lightweight structural purposes. Combines data harvesting from the Materials Project, physics-informed machine learning, genetic algorithm-driven inverse design and ML interatomic potential relaxation.
 
 </div>
 
@@ -83,8 +83,8 @@ git clone https://github.com/YOUR_USERNAME/MetaForge.git
 cd MetaForge
 
 # Create and activate virtual environment (Windows PowerShell)
-python -m venv pymatgenenv
-.\pymatgenenv\Scripts\Activate.ps1
+python -m venv ----
+.\----\Scripts\Activate.ps1
 
 # Install core dependencies
 pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib matminer chgnet flask flask-cors joblib
@@ -110,9 +110,8 @@ Navigate to the web directory and start the Flask server using the virtual envir
 
 ```bash
 cd MetaForge-Web
-..\pymatgenenv\Scripts\python.exe app.py
+..\----\Scripts\python.exe app.py
 ```
-*Access the interface at http://localhost:5000*
 </details>
 
 ---
