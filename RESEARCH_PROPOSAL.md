@@ -1,7 +1,7 @@
 # Research Proposal: Machine Learning-Accelerated Discovery of Multi-Principal Element Alloys for Extreme Environments
 
 **Principal Investigator:** Solomon Ahedor  
-**Affiliation:** Department of Metallurgical & Materials Engineering (Year 4)  
+**Affiliation:** Kwame Nkrumah University of Science and Technology, Department of Metallurgical & Materials Engineering (Year 4)  
 **Project:** MetaForge — ML-Driven High Entropy Alloy Discovery Platform  
 **Date:** May 2026
 
@@ -47,7 +47,7 @@ Machine learning models trained on physics-derived descriptors (atomic radii, el
 ### 2.1 Data Pipeline
 
 - Harvested elemental properties (atomic radii, density, VEC, electronegativity) for 17 elements across 4 HEA families from the **Materials Project API**.
-- Built a combinatorial engine that generates thousands of candidate compositions and filters them using physics-based stability criteria:
+- Built a combinatorial engine using the itertools library that generates thousands of candidate compositions and filters them using physics-based stability criteria:
   - Lattice strain δ < 6.6% (Hume-Rothery rules)
   - VEC thresholds for phase prediction (BCC: 5.0–6.8, FCC: ≥8.0)
 
@@ -75,11 +75,12 @@ Machine learning models trained on physics-derived descriptors (atomic radii, el
 
 ### 2.4 Structural Relaxation (The Compute Breakthrough)
 
-A critical milestone was achieved by scaling the crystal simulation to **3×3×3 BCC supercells (54 atoms)**. Initial attempts on a local 8GB laptop and Google Colab (12GB) failed due to insufficient memory. By optimizing the cell size and leveraging **CHGNet** (a graph neural network interatomic potential), we successfully:
+A critical milestone was achieved by scaling the crystal simulation to **3×3×3 BCC supercells (54 atoms)**. Initial attempts on a local 8GB laptop and Google Colab (12GB) failed due to insufficient memory. By optimizing the cell size and leveraging **CHGNet** (a graph neural network interatomic potential), I successfully:
 
 - Built 54-atom Special Quasirandom Structures (SQS) for top candidates.
 - Relaxed atomic positions using the FIRE optimizer with CHGNet as the energy/force calculator.
 - Exported optimized structures as CIF files for further analysis.
+- These .cif files are available to view in crystal structure web viewers
 
 ### 2.5 Web Deployment
 
@@ -93,7 +94,9 @@ A critical milestone was achieved by scaling the crystal simulation to **3×3×3
 
 ### 3.1 DFT Validation of Top Candidates
 
-**Objective:** Validate ML predictions using first-principles Density Functional Theory (DFT) calculations.
+**Objective:** Validate ML predictions using first-principles Density Functional Theory (DFT) calculations. 
+
+(As an undergraduate student, I am still learning computational materials with a focus on material informatics)
 
 - Perform full structural relaxation and total energy calculations using **VASP** or **Quantum ESPRESSO** on the top 5 GA-discovered candidates.
 - Calculate elastic constants (C₁₁, C₁₂, C₄₄) to derive bulk modulus, shear modulus, and Young's modulus from first principles.
@@ -139,6 +142,10 @@ A critical milestone was achieved by scaling the crystal simulation to **3×3×3
 - TMS Annual Meeting — Computational Materials Science symposium
 - MRS Spring Meeting — Machine Learning for Materials Discovery
 
+( I am willing to learn under good guildance in the exploration of computational materials)
+This project was primary inspired by Prof. Emmanuel Kwesi Arthur at KNUST (https://webapps.knust.edu.gh/staff/dirsearch/profile/summary/2d5b0c584928.html) on his teaching of non-ferrous alloys, Prof. Kwadwo Mensah-Darkwa at KNUST on his teaching of MatLab and software related program at the materials and metallurgical department (https://webapps.knust.edu.gh/staff/dirsearch/profile/summary/0719f2655b8c.html) and Prof. Taylor Sparks on his teaching of materials informatics at the University of Utah. (https://profiles.faculty.utah.edu/u0203991)
+
+
 ---
 
 ## 4. Compute & Resource Requirements
@@ -146,7 +153,7 @@ A critical milestone was achieved by scaling the crystal simulation to **3×3×3
 | Resource | Requirement | Justification |
 |----------|-------------|---------------|
 | **HPC Access** | 500–1,000 CPU-hours | DFT calculations (VASP/QE) for 5 candidate structures |
-| **GPU Access** | 50–100 GPU-hours | CHGNet relaxation of larger supercells (4×4×4, 128 atoms) |
+| **GPU Access** | 50–100 GPU-hours | CHGNet relaxation of larger supercells (5×5x5) |
 | **Software Licenses** | VASP license | DFT calculations (available through most university HPC centers) |
 | **Lab Access** | Arc melting furnace, XRD, SEM | Experimental synthesis and characterization |
 | **Storage** | ~50 GB | DFT output files, expanded training datasets |
@@ -174,14 +181,14 @@ This project brings a **complete, functional ML pipeline** to the research group
 - A live web deployment for interactive exploration.
 - Open-source code ready for extension.
 
-The primary areas where **collaboration with the research group's PhD students** would be invaluable:
+The primary areas where **collaboration with the research groups, Professors and PhD students** would be invaluable:
 
 1. **DFT expertise:** Running and interpreting VASP/QE calculations.
 2. **Experimental synthesis:** Access to arc melting equipment and characterization facilities.
-3. **Domain knowledge:** Deep understanding of HEA thermodynamics, phase stability, and mechanical behavior.
+3. **Domain knowledge:** Deep understanding of HEA thermodynamics, phase stability, material selection and quality assurance, computational materials, characterisation, mechanical behavior, etc.
 4. **Publication mentorship:** Guidance on manuscript preparation for high-impact journals.
 
-In return, this project contributes ML infrastructure, web deployment capabilities, and a novel screening methodology that can be applied to the group's broader research portfolio.
+In return, this project contributes ML infrastructure, web deployment capabilities, and a novel screening methodology that can be applied to a group's broader research portfolio.
 
 ---
 
