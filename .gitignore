@@ -1,0 +1,31 @@
+# Environments
+pymatgenenv/
+env/
+venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+
+
+# Debugging scripts
+rendered.html
+temp.jsx
+debug_pw.py
+take_screenshot.py
+debug_dom.js
+*.png
