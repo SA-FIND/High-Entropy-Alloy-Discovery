@@ -122,7 +122,7 @@ Navigate to the web directory and start the Flask server using the virtual envir
 
 ```bash
 cd MetaForge-Web
-..\pymatgenenv\Scripts\python.exe app.py
+..\----\Scripts\python.exe app.py
 ```
 </details>
 
@@ -165,7 +165,7 @@ This project is deployed on [Render](https://render.com/) using the included `re
 1. Fork this repository
 2. Create a free account on [Render](https://render.com/)
 3. Click **New+ → Blueprint** and connect your fork
-4. Render will auto-detect `render.yaml` and deploy
+   
 
 ---
 
