@@ -9,6 +9,7 @@
 [![Materials Project](https://img.shields.io/badge/Materials%20Project-API-00c853?style=flat-square)](https://materialsproject.org/)
 [![CHGNet](https://img.shields.io/badge/CHGNet-GNN-ff6f00?style=flat-square)](https://github.com/CederGroupHub/chgnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
 An end-to-end computational materials science pipeline for discovering optimal High Entropy Alloys (HEAs) for diverse applications including aerospace, corrosion resistance, refractory, and lightweight structural purposes. Combines data harvesting from the Materials Project, physics-informed machine learning, genetic algorithm-driven inverse design and ML interatomic potential relaxation.
 
 </div>
