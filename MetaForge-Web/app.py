@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, make_response
 from flask_cors import CORS
 import joblib
 from pymatgen.core import Composition
@@ -13,6 +13,9 @@ warnings.filterwarnings("ignore")
 app = Flask(__name__)
 # Configuring cross-origin resource sharing
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+# Disable static file caching in Flask config
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,7 +38,13 @@ logger.info("Models loaded successfully.")
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    """Renders the single-page application with strict cache-busting headers."""
+    response = make_response(render_template('index.html'))
+    # Ensure browser always fetches the latest UI updates
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/predict', methods=['POST'])
 def predict():
