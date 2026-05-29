@@ -14,7 +14,7 @@ app = Flask(__name__)
 # Configuring cross-origin resource sharing
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Disable static file caching in Flask config
+# Disabling static file caching
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +27,7 @@ def set_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' *"
     return response
 
 # Loading regression models and Matminer Magpie features
@@ -40,7 +41,7 @@ logger.info("Models loaded successfully.")
 def home():
     """Renders the single-page application with strict cache-busting headers."""
     response = make_response(render_template('index.html'))
-    # Ensure browser always fetches the latest UI updates
+    # Ensuring browser always fetches the latest UI updates
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
@@ -53,7 +54,7 @@ def predict():
         if not data or not isinstance(data, dict):
             return jsonify({'error': 'Invalid JSON payload provided.'}), 400
 
-        # DYNAMIC EXTRACTION: Read whichever elements the frontend sends
+        # Extracting elements dynamically from frontend payload
         elements = list(data.keys())
         raw_values = []
         
