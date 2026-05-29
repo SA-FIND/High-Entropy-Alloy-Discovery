@@ -3,6 +3,9 @@
 # MetaForge
 **ML-Powered High Entropy Alloy Discovery**
 
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-metaforge--web.onrender.com-00C853?style=for-the-badge)](https://metaforge-web.onrender.com/)
+[![Render](https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://metaforge-web.onrender.com/)
+
 [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask 3.1.3](https://img.shields.io/badge/Flask-3.1.3-black?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![React 18](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://reactjs.org/)
@@ -13,6 +16,14 @@
 An end-to-end computational materials science pipeline for discovering optimal High Entropy Alloys (HEAs) for diverse applications including aerospace, corrosion resistance, refractory, and lightweight structural purposes. Combines data harvesting from the Materials Project, physics-informed machine learning, genetic algorithm-driven inverse design and ML interatomic potential relaxation.
 
 </div>
+
+---
+
+## 🚀 Live Demo
+
+**Try the app now →** [metaforge-web.onrender.com](https://metaforge-web.onrender.com/)
+
+> **Note:** The free-tier server sleeps after 15 minutes of inactivity. The first visit may take ~1 minute to wake up while it loads the ML models. Subsequent requests are instant.
 
 ---
 
@@ -80,12 +91,12 @@ flowchart TD
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/MetaForge.git
-cd MetaForge
+git clone https://github.com/SA-FIND/High-Entropy-Alloy-Discovery.git
+cd High-Entropy-Alloy-Discovery
 
 # Create and activate virtual environment (Windows PowerShell)
-python -m venv ----
-.\----\Scripts\Activate.ps1
+python -m venv pymatgenenv
+.\pymatgenenv\Scripts\Activate.ps1
 
 # Install core dependencies
 pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib matminer chgnet flask flask-cors joblib
@@ -111,9 +122,29 @@ Navigate to the web directory and start the Flask server using the virtual envir
 
 ```bash
 cd MetaForge-Web
-..\----\Scripts\python.exe app.py
+..\pymatgenenv\Scripts\python.exe app.py
 ```
 </details>
+
+---
+
+## Model Performance
+
+| Metric | Density Model | Strength Model |
+|--------|--------------|----------------|
+| **Algorithm** | Random Forest | Random Forest |
+| **Features** | 132 Magpie descriptors | 132 Magpie descriptors |
+| **RMSE** | 0.073 g/cm³ | 0.539 GPa |
+| **Training Set** | 5,000 synthetic alloys | 5,000 synthetic alloys |
+
+### Top Discovered Candidate (Genetic Algorithm)
+
+| Property | Value |
+|----------|-------|
+| **Composition** | W₀.₁₀ Mo₀.₄₀ Ta₀.₀₅ Nb₀.₀₅ V₀.₄₀ |
+| **Predicted Density** | 9.68 g/cm³ |
+| **Predicted Strength** | 90.71 GPa |
+| **Specific Strength** | 9.37 GPa·cm³/g |
 
 ---
 
@@ -124,6 +155,17 @@ cd MetaForge-Web
 | **Refractory** | BCC | δ < 6.6% | 5.0 ≤ VEC ≤ 6.8 |
 | **Corrosion-Resistant** | FCC | δ < 6.6% | VEC ≥ 8.0 |
 | **Lightweight** | Mixed/HCP | δ < 6.6% | — |
+
+---
+
+## Deployment
+
+This project is deployed on [Render](https://render.com/) using the included `render.yaml` Blueprint. To deploy your own instance:
+
+1. Fork this repository
+2. Create a free account on [Render](https://render.com/)
+3. Click **New+ → Blueprint** and connect your fork
+4. Render will auto-detect `render.yaml` and deploy
 
 ---
 
