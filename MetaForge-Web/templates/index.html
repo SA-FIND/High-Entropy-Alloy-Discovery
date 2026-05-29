@@ -241,6 +241,39 @@
             transition: opacity 0.2s;
         }
 
+
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tab-btn {
+            background-color: var(--bg-deep);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .tab-btn.active {
+            background-color: #3b82f6;
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+
         @media (max-width: 768px) {
             .main-grid { grid-template-columns: 1fr; }
         }
@@ -261,6 +294,7 @@
         <div class="main-grid">
             <div class="card">
                 <h2 class="card__title">Alloy Composition</h2>
+                <div id="categoryTabs" class="category-tabs"></div>
                 <div id="sliders-container"></div>
                 
                 <div class="donut-section">
@@ -290,15 +324,34 @@
     </main>
 
     <script>
-        const elements = [
-            { sym: 'Al', name: 'Aluminium', color: 'var(--el-al)' },
-            { sym: 'Ti', name: 'Titanium', color: 'var(--el-ti)' },
-            { sym: 'Sc', name: 'Scandium', color: 'var(--el-sc)' },
-            { sym: 'Zr', name: 'Zirconium', color: 'var(--el-zr)' },
-            { sym: 'V', name: 'Vanadium', color: 'var(--el-v)' }
-        ];
+        // Define the Metallurgical Universes
+        const ALLOY_FAMILIES = {
+            "Aerospace (Lightweight)": [
+                { sym: 'Al', name: 'Aluminium', color: '#3b82f6' },
+                { sym: 'Ti', name: 'Titanium', color: '#8b5cf6' },
+                { sym: 'Sc', name: 'Scandium', color: '#10b981' },
+                { sym: 'Zr', name: 'Zirconium', color: '#f59e0b' },
+                { sym: 'V',  name: 'Vanadium', color: '#ef4444' }
+            ],
+            "Corrosion Resistant": [
+                { sym: 'Co', name: 'Cobalt', color: '#3b82f6' },
+                { sym: 'Cr', name: 'Chromium', color: '#8b5cf6' },
+                { sym: 'Fe', name: 'Iron', color: '#10b981' },
+                { sym: 'Ni', name: 'Nickel', color: '#f59e0b' },
+                { sym: 'Cu', name: 'Copper', color: '#ef4444' }
+            ],
+            "Refractory (High Temp)": [
+                { sym: 'Mo', name: 'Molybdenum', color: '#3b82f6' },
+                { sym: 'Nb', name: 'Niobium', color: '#8b5cf6' },
+                { sym: 'Ta', name: 'Tantalum', color: '#10b981' },
+                { sym: 'V',  name: 'Vanadium', color: '#f59e0b' },
+                { sym: 'W',  name: 'Tungsten', color: '#ef4444' }
+            ]
+        };
 
-        let state = { Al: 20, Ti: 20, Sc: 20, Zr: 20, V: 20 };
+        let currentCategory = "Aerospace (Lightweight)";
+        let elements = ALLOY_FAMILIES[currentCategory];
+        let state = {};
         let resultsComp = {};
         let debounceTimer = null;
 
@@ -306,9 +359,33 @@
         const donutChart = document.getElementById('donutChart');
         const donutLegend = document.getElementById('donutLegend');
         const loadingBar = document.getElementById('loadingBar');
+        const tabsContainer = document.getElementById('categoryTabs');
+
+        // Initialize state to 20% for each element
+        function initState() {
+            state = {};
+            elements.forEach(el => state[el.sym] = 20);
+        }
+
+        function renderTabs() {
+            tabsContainer.innerHTML = Object.keys(ALLOY_FAMILIES).map(cat => 
+                <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" 
+                        onclick="switchCategory('${cat}')">
+                    ${cat}
+                </button>
+            ).join('');
+        }
+
+        function switchCategory(cat) {
+            currentCategory = cat;
+            elements = ALLOY_FAMILIES[cat];
+            initState();
+            renderTabs();
+            initUI();
+        }
 
         function initUI() {
-            container.innerHTML = elements.map(el => `
+            container.innerHTML = elements.map(el => 
                 <div class="slider-group">
                     <div class="slider-header">
                         <div class="el-label">
@@ -316,17 +393,19 @@
                             ${el.sym} <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 400; margin-left: 4px;">${el.name}</span>
                         </div>
                         <div class="input-group">
-                            <input type="number" id="num-${el.sym}" aria-label="${el.name} percentage input" value="${state[el.sym]}" min="0" max="100">
+                            <input type="number" id="num-${el.sym}" aria-label=$"{el.name} percentage input" value=$"{state[el.sym]}" min="0" max="100">
                             <div class="normalized-val" id="norm-${el.sym}">0.0%</div>
                         </div>
                     </div>
-                    <input type="range" id="range-${el.sym}" aria-label="${el.name} slider" value="${state[el.sym]}" min="0" max="100">
+                    <input type="range" id="range-${el.sym}" aria-label=$"{el.name} slider" value=$"{state[el.sym]}" min="0" max="100">
                 </div>
-            `).join('');
+            ).join('');
 
             elements.forEach(el => {
-                const numInput = document.getElementById(`num-${el.sym}`);
-                const rangeInput = document.getElementById(`range-${el.sym}`);
+                const numInput = document.getElementById(
+um-${el.sym});
+                const rangeInput = document.getElementById(
+ange-${el.sym});
 
                 const update = (val) => {
                     let parsed = parseInt(val, 10);
@@ -360,21 +439,21 @@
             elements.forEach(el => {
                 const pct = resultsComp[el.sym] || 0;
                 if (pct > 0) {
-                    const dasharray = `${pct} 100`;
+                    const dasharray = ${pct} 100;
                     const dashoffset = -cumulative;
-                    svgContent += `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="${el.color}" stroke-width="6" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}"></circle>`;
+                    svgContent += <circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke=$"{el.color}" stroke-width="6" stroke-dasharray=$"{dasharray}" stroke-dashoffset=$"{dashoffset}"></circle>;
                     cumulative += pct;
 
-                    legendContent += `
+                    legendContent += 
                         <div class="legend-item">
                             <div class="el-dot" style="background-color: ${el.color}"></div>
                             ${el.sym} ${pct.toFixed(1)}%
                         </div>
-                    `;
+                    ;
                 }
             });
 
-            donutChart.innerHTML = svgContent || `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="var(--border-subtle)" stroke-width="6"></circle>`;
+            donutChart.innerHTML = svgContent || <circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="var(--border-subtle)" stroke-width="6"></circle>;
             donutLegend.innerHTML = legendContent;
         }
 
@@ -396,8 +475,11 @@
                 
                 // Update normalized labels
                 elements.forEach(el => {
-                    const normEl = document.getElementById(`norm-${el.sym}`);
-                    normEl.innerText = (resultsComp[el.sym] || 0).toFixed(1) + '%';
+                    const normEl = document.getElementById(
+orm-${el.sym});
+                    if (normEl) {
+                        normEl.innerText = (resultsComp[el.sym] || 0).toFixed(1) + '%';
+                    }
                 });
 
                 updateDonut();
@@ -408,6 +490,9 @@
             }
         }
 
+        // Boot sequence
+        initState();
+        renderTabs();
         initUI();
     </script>
 </body>

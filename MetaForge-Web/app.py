@@ -44,7 +44,8 @@ def predict():
         if not data or not isinstance(data, dict):
             return jsonify({'error': 'Invalid JSON payload provided.'}), 400
 
-        elements = ['Al', 'Ti', 'Sc', 'Zr', 'V']
+        # DYNAMIC EXTRACTION: Read whichever elements the frontend sends
+        elements = list(data.keys())
         raw_values = []
         
         # Extracting elemental weights
@@ -82,7 +83,6 @@ def predict():
         })
     except Exception as e:
         logger.error(f"Prediction Error: {str(e)}\n{traceback.format_exc()}")
-        # Obfuscating stack traces from client responses
         return jsonify({'error': 'An internal error occurred during prediction.'}), 500
 
 if __name__ == '__main__':
