@@ -16,26 +16,26 @@ An end-to-end computational materials science pipeline for discovering optimal H
 
 ---
 
-## ⚡ Core Features
+## Core Features
 
-> 🧬 **Combinatorial Engine**<br>
+> **Combinatorial Engine**<br>
 > Generates thousands of theoretical alloy compositions and filters them using physics-based stability rules (lattice strain δ, VEC thresholds).
 
-> 🤖 **ML Property Prediction**<br>
+> **ML Property Prediction**<br>
 > Trains RandomForest models on 132 Matminer Magpie descriptors to predict density and shear strength from composition.
 
-> 🧬 **Genetic Algorithm Inverse Design**<br>
+> **Genetic Algorithm Inverse Design**<br>
 > Evolves alloy compositions over 20 generations to maximize specific strength (strength-to-weight ratio).
 
-> ⚛️ **CHGNet Structure Relaxation**<br>
+> **CHGNet Structure Relaxation**<br>
 > Relaxes 54-atom supercell blueprints using a graph neural network interatomic potential.
 
-> 🌐 **Real-Time Web Interface**<br>
+> **Real-Time Web Interface**<br>
 > Flask app with interactive composition sliders, live ML predictions, and a composition donut chart.
 
 ---
 
-## 🏗 Architecture & Data Flow
+## Architecture & Data Flow
 
 ```mermaid
 flowchart TD
@@ -53,7 +53,7 @@ flowchart TD
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 **Core Engineering**<br>
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
@@ -73,7 +73,7 @@ flowchart TD
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 <details open>
 <summary><b>1. Environment Setup</b></summary>
@@ -118,7 +118,7 @@ cd MetaForge-Web
 
 ---
 
-## 🔬 Physics & Stability Filters
+## Physics & Stability Filters
 
 | HEA Family | Crystal Structure | Lattice Strain (δ) | VEC Range |
 |------------|-------------------|---------------------|-----------|
@@ -128,7 +128,7 @@ cd MetaForge-Web
 
 ---
 
-## 📄 License & Attribution
+## License & Attribution
 
 This project is open-source under the MIT License.
 
