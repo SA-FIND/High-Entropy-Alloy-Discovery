@@ -4,13 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Computational Materials Intelligence: Predict High Entropy Alloy properties such as density and shear strength using ML and Matminer features.">
-    <meta name="keywords" content="materials science, HEA, high entropy alloy, machine learning, prediction, density, shear strength, MetaForge">
+    <meta name="description"
+        content="Computational Materials Intelligence: Predict High Entropy Alloy properties such as density and shear strength using ML and Matminer features.">
+    <meta name="keywords"
+        content="materials science, HEA, high entropy alloy, machine learning, prediction, density, shear strength, MetaForge">
     <title>MetaForge — HEA Predictor</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
 
     <style>
         :root {
@@ -18,7 +22,7 @@
             --bg-surface: #0d1117;
             --bg-card: #111827;
             --border-subtle: #1f2937;
-            
+
             --text-primary: #e8ecf4;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
@@ -33,7 +37,13 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: var(--font-sans);
@@ -151,7 +161,7 @@
             border-radius: 2px;
             outline: none;
         }
-        
+
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 16px;
@@ -229,53 +239,65 @@
         }
 
         /* Value colors */
-        .val-density { color: #ef4444; }
-        .val-strength { color: #10b981; }
-        .val-score { color: #3b82f6; }
+        .val-density {
+            color: #ef4444;
+        }
+
+        .val-strength {
+            color: #10b981;
+        }
+
+        .val-score {
+            color: #3b82f6;
+        }
 
         .loading-bar {
             position: fixed;
-            top: 0; left: 0; right: 0; height: 3px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
             background: #3b82f6;
             opacity: 0;
             transition: opacity 0.2s;
         }
 
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
         .category-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            overflow-x: auto;
-            padding-bottom: 4px;
+            gap: 12px;
+            margin-bottom: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
-            background-color: var(--bg-deep);
-            color: var(--text-secondary);
+            background-color: var(--bg-surface);
             border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
             padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
-            white-space: nowrap;
+            font-family: var(--font-sans);
+            font-weight: 600;
             transition: all 0.2s;
         }
 
-        .tab-btn:hover {
-            color: var(--text-primary);
-            border-color: var(--text-muted);
-        }
-
         .tab-btn.active {
-            background-color: #3b82f6;
-            color: #ffffff;
-            border-color: #3b82f6;
+            background-color: var(--el-al);
+            color: white;
+            border-color: var(--el-al);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
         }
 
-        @media (max-width: 768px) {
-            .main-grid { grid-template-columns: 1fr; }
+        .tab-btn:hover:not(.active) {
+            background-color: var(--border-subtle);
+            color: var(--text-primary);
         }
     </style>
 </head>
@@ -287,16 +309,16 @@
         <header class="header">
             <h1 class="header__title">Computational Materials Intelligence</h1>
             <p class="header__subtitle">
-                Configure alloy composition to generate real-time structural property predictions using ML models and material features.
+                Configure alloy composition to generate real-time structural property predictions using ML models and
+                material features.
             </p>
         </header>
-
+        <div class="category-tabs" id="categoryTabs"></div>
         <div class="main-grid">
             <div class="card">
                 <h2 class="card__title">Alloy Composition</h2>
-                <div id="categoryTabs" class="category-tabs"></div>
                 <div id="sliders-container"></div>
-                
+
                 <div class="donut-section">
                     <svg class="donut-svg" viewBox="0 0 32 32" id="donutChart" aria-hidden="true"></svg>
                     <div class="donut-legend" id="donutLegend"></div>
@@ -308,15 +330,18 @@
                 <div class="results-stack">
                     <div class="result-tile">
                         <div class="result-label">Predicted Density</div>
-                        <div class="result-value val-density"><span id="val-density">0.00</span><span class="result-unit">g/cm³</span></div>
+                        <div class="result-value val-density"><span id="val-density">0.00</span><span
+                                class="result-unit">g/cm³</span></div>
                     </div>
                     <div class="result-tile">
                         <div class="result-label">Predicted Shear Strength</div>
-                        <div class="result-value val-strength"><span id="val-strength">0.00</span><span class="result-unit">GPa</span></div>
+                        <div class="result-value val-strength"><span id="val-strength">0.00</span><span
+                                class="result-unit">GPa</span></div>
                     </div>
                     <div class="result-tile" style="border-color: #3b82f6;">
                         <div class="result-label" style="color: #3b82f6;">Specific Strength Score</div>
-                        <div class="result-value val-score"><span id="val-score">0.00</span><span class="result-unit">GPa·cm³/g</span></div>
+                        <div class="result-value val-score"><span id="val-score">0.00</span><span
+                                class="result-unit">GPa·cm³/g</span></div>
                     </div>
                 </div>
             </div>
@@ -324,32 +349,39 @@
     </main>
 
     <script>
-        // Define the Metallurgical Universes
+        // Define the 4 Metallurgical Universes
         const ALLOY_FAMILIES = {
-            "Aerospace (Lightweight)": [
+            "Aerospace Alloy": [
                 { sym: 'Al', name: 'Aluminium', color: '#3b82f6' },
                 { sym: 'Ti', name: 'Titanium', color: '#8b5cf6' },
                 { sym: 'Sc', name: 'Scandium', color: '#10b981' },
                 { sym: 'Zr', name: 'Zirconium', color: '#f59e0b' },
-                { sym: 'V',  name: 'Vanadium', color: '#ef4444' }
+                { sym: 'V', name: 'Vanadium', color: '#ef4444' }
             ],
-            "Corrosion Resistant": [
+            "Lightweight Alloy": [
+                { sym: 'Al', name: 'Aluminium', color: '#3b82f6' },
+                { sym: 'Mg', name: 'Magnesium', color: '#8b5cf6' },
+                { sym: 'Li', name: 'Lithium', color: '#10b981' },
+                { sym: 'Ti', name: 'Titanium', color: '#f59e0b' },
+                { sym: 'Zn', name: 'Zinc', color: '#ef4444' }
+            ],
+            "Refractory Alloy": [
+                { sym: 'W', name: 'Tungsten', color: '#3b82f6' },
+                { sym: 'Mo', name: 'Molybdenum', color: '#8b5cf6' },
+                { sym: 'Ta', name: 'Tantalum', color: '#10b981' },
+                { sym: 'Nb', name: 'Niobium', color: '#f59e0b' },
+                { sym: 'V', name: 'Vanadium', color: '#ef4444' }
+            ],
+            "Corrosion Resistance": [
                 { sym: 'Co', name: 'Cobalt', color: '#3b82f6' },
                 { sym: 'Cr', name: 'Chromium', color: '#8b5cf6' },
                 { sym: 'Fe', name: 'Iron', color: '#10b981' },
                 { sym: 'Ni', name: 'Nickel', color: '#f59e0b' },
                 { sym: 'Cu', name: 'Copper', color: '#ef4444' }
-            ],
-            "Refractory (High Temp)": [
-                { sym: 'Mo', name: 'Molybdenum', color: '#3b82f6' },
-                { sym: 'Nb', name: 'Niobium', color: '#8b5cf6' },
-                { sym: 'Ta', name: 'Tantalum', color: '#10b981' },
-                { sym: 'V',  name: 'Vanadium', color: '#f59e0b' },
-                { sym: 'W',  name: 'Tungsten', color: '#ef4444' }
             ]
         };
 
-        let currentCategory = "Aerospace (Lightweight)";
+        let currentCategory = "Aerospace Alloy";
         let elements = ALLOY_FAMILIES[currentCategory];
         let state = {};
         let resultsComp = {};
@@ -368,6 +400,7 @@
         }
 
         function renderTabs() {
+            if (!tabsContainer) return;
             tabsContainer.innerHTML = Object.keys(ALLOY_FAMILIES).map(cat => 
                 <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" 
                         onclick="switchCategory('${cat}')">
@@ -496,4 +529,5 @@ orm-${el.sym});
         initUI();
     </script>
 </body>
+
 </html>
