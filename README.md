@@ -96,7 +96,7 @@ cd High-Entropy-Alloy-Discovery
 
 # Create and activate virtual environment (Windows PowerShell)
 python -m venv pymatgenenv
-.\pymatgenenv\Scripts\Activate.ps1
+.\----\Scripts\Activate.ps1
 
 # Install core dependencies
 pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib matminer chgnet flask flask-cors joblib
