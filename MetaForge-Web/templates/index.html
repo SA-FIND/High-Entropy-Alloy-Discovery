@@ -44,10 +44,10 @@
            DESIGN TOKENS — DARK THEME (default)
            ═══════════════════════════════════════════════ */
         :root {
-            --bg-deep: #0a0a0c;
-            --bg-surface: #121214;
-            --bg-card: #18181b;
-            --border-subtle: #27272a;
+            --bg-deep: #050508;
+            --bg-surface: rgba(18, 18, 20, 0.5);
+            --bg-card: rgba(24, 24, 27, 0.3);
+            --border-subtle: rgba(255, 255, 255, 0.08);
 
             --text-primary: #f4f4f5;
             --text-secondary: #a1a1aa;
@@ -73,10 +73,10 @@
            LIGHT THEME
            ═══════════════════════════════════════════════ */
         :root.light {
-            --bg-deep: #f0f2f5;
-            --bg-surface: #ffffff;
-            --bg-card: #ffffff;
-            --border-subtle: #e5e7eb;
+            --bg-deep: #eef2f6;
+            --bg-surface: rgba(255, 255, 255, 0.5);
+            --bg-card: rgba(255, 255, 255, 0.3);
+            --border-subtle: rgba(255, 255, 255, 0.6);
 
             --text-primary: #111827;
             --text-secondary: #4b5563;
@@ -102,7 +102,31 @@
             background-color: var(--bg-deep);
             color: var(--text-primary);
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
             transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* LIQUID MESH GRADIENT */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
+            animation: liquid-rotate 30s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes liquid-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* ═══════════════════════════════════════════════
@@ -181,6 +205,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }
 
@@ -206,11 +233,15 @@
             border: 1px solid var(--border-subtle);
             border-radius: 16px;
             padding: 32px;
-            transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s ease;
         }
 
         .card:hover {
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .card__title {
@@ -242,6 +273,8 @@
             font-family: var(--font-sans);
             font-size: 0.85rem;
             font-weight: 600;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             transition: all 0.25s ease;
         }
 
@@ -424,12 +457,16 @@
             padding: 24px;
             border-radius: 12px;
             text-align: center;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0,0,0,0.1);
             transition: all 0.4s ease;
         }
 
         .result-tile:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0,0,0,0.15);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .result-label {

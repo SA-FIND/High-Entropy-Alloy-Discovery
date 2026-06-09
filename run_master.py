@@ -229,8 +229,20 @@ for cat, elements_dict in alloy_categories.items():
     for i in range(TOTAL_ATOMS):
         dummy_struct.replace(i, atom_list[i])
         
-    file_name = f"Optimal_{cat}_Blueprint.cif"
-    CifWriter(dummy_struct).write_file(file_name)
-    print(f"  [CIF] Saved to: {file_name}")
+    print(f"\\n  [CIF] Relaxing {cat} 54-atom 3D SQS blueprint using CHGNet...")
+    from chgnet.model.dynamics import StructOptimizer
+    relaxer = StructOptimizer()
+    
+    # Relax the structure for up to 100 steps
+    relax_result = relaxer.relax(dummy_struct, steps=100)
+    relaxed_struct = relax_result["final_structure"]
+    
+    file_name_blueprint = f"Optimal_{cat}_Blueprint.cif"
+    CifWriter(dummy_struct).write_file(file_name_blueprint)
+    print(f"  [CIF] Saved unrelaxed blueprint to: {file_name_blueprint}")
+    
+    file_name_relaxed = f"Optimal_{cat}_Relaxed.cif"
+    CifWriter(relaxed_struct).write_file(file_name_relaxed)
+    print(f"  [CIF] Saved relaxed structure to: {file_name_relaxed}")
 
 print("\\n[3/3] Master Script Complete!")
