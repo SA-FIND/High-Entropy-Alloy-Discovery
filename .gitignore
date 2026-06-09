@@ -33,3 +33,7 @@ debug_dom.js
 # Node
 node_modules/
 AGENT_CONTEXT.md
+temp_output.html
+fix_js.py
+*.cif
+*.model

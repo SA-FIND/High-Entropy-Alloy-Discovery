@@ -18,6 +18,20 @@
     <meta name="twitter:description" content="Computational Materials Intelligence: Predict High Entropy Alloy properties using ML and Matminer features.">
 
     <title>MetaForge — HEA Predictor</title>
+    
+    <link rel="canonical" href="https://metaforge-web.onrender.com/">
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "MetaForge — HEA Predictor",
+      "url": "https://metaforge-web.onrender.com/",
+      "description": "Computational Materials Intelligence: Predict High Entropy Alloy properties such as density and shear strength using ML and Matminer features.",
+      "applicationCategory": "ScienceApplication",
+      "operatingSystem": "All"
+    }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,14 +44,14 @@
            DESIGN TOKENS — DARK THEME (default)
            ═══════════════════════════════════════════════ */
         :root {
-            --bg-deep: #06080f;
-            --bg-surface: #0d1117;
-            --bg-card: #111827;
-            --border-subtle: #1f2937;
+            --bg-deep: #0a0a0c;
+            --bg-surface: #121214;
+            --bg-card: #18181b;
+            --border-subtle: #27272a;
 
-            --text-primary: #e8ecf4;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
 
             --accent-blue: #3b82f6;
             --accent-green: #10b981;
@@ -53,9 +67,6 @@
 
             --font-sans: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
-
-            --glow-blue: rgba(59, 130, 246, 0.35);
-            --glow-green: rgba(16, 185, 129, 0.35);
         }
 
         /* ═══════════════════════════════════════════════
@@ -108,11 +119,6 @@
             }
         }
 
-        @keyframes subtlePulse {
-            0%, 100% { box-shadow: 0 0 0 0 var(--glow-blue); }
-            50% { box-shadow: 0 0 20px 4px var(--glow-blue); }
-        }
-
         .animate-in {
             opacity: 0;
             animation: fadeSlideUp 0.6s ease forwards;
@@ -145,10 +151,8 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 12px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
         }
 
         .header__subtitle {
@@ -242,10 +246,9 @@
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 16px var(--glow-blue);
+            background-color: var(--text-primary);
+            color: var(--bg-deep);
+            border-color: var(--text-primary);
         }
 
         .tab-btn:hover:not(.active) {
@@ -458,11 +461,8 @@
 
         /* Score tile special glow */
         .result-tile--score {
-            border-color: var(--accent-blue);
-        }
-
-        .result-tile--score.pulse {
-            animation: subtlePulse 1s ease;
+            border-color: var(--border-subtle);
+            background-color: var(--bg-deep);
         }
 
         /* ═══════════════════════════════════════════════
@@ -474,7 +474,7 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-violet));
+            background: var(--text-primary);
             opacity: 0;
             transition: opacity 0.2s;
             z-index: 1000;
@@ -619,8 +619,8 @@
                                 class="result-unit">GPa</span></div>
                     </div>
                     <div class="result-tile result-tile--score" id="scoreTile">
-                        <div class="result-label" style="color: var(--accent-blue);">Specific Strength Score</div>
-                        <div class="result-value val-score"><span id="val-score">0.00</span><span
+                        <div class="result-label" style="color: var(--text-primary);">Specific Strength Score</div>
+                        <div class="result-value val-score" style="color: var(--text-primary);"><span id="val-score">0.00</span><span
                                 class="result-unit">GPa·cm³/g</span></div>
                     </div>
                 </div>
@@ -766,7 +766,7 @@
                             <div class="normalized-val" id="norm-${el.sym}">0.0%</div>
                         </div>
                     </div>
-                    <input type="range" id="range-${el.sym}" aria-label="${el.name} slider" value="${state[el.sym]}" min="0" max="100">
+                    <input type="range" id="range-${el.sym}" aria-label="${el.name} slider" title="${el.name} percentage" value="${state[el.sym]}" min="0" max="100">
                 </div>`
             ).join('');
 
@@ -811,7 +811,7 @@
                 if (pct > 0) {
                     const dasharray = `${pct} 100`;
                     const dashoffset = -cumulative;
-                    svgContent += `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="${el.color}" stroke-width="6" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}" data-el="${el.sym}" data-pct="${pct.toFixed(1)}" style="cursor:pointer;"></circle>`;
+                    svgContent += `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="${el.color}" stroke-width="6" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}" data-el="${el.sym}" data-pct="${pct.toFixed(1)}" style="cursor:pointer; outline: none;" tabindex="0" role="graphics-symbol" aria-label="${el.sym} composition: ${pct.toFixed(1)}%"></circle>`;
                     cumulative += pct;
 
                     legendContent +=
@@ -827,17 +827,34 @@
 
             // Attach hover tooltips to donut segments
             donutChart.querySelectorAll('circle[data-el]').forEach(circle => {
-                circle.addEventListener('mouseenter', (e) => {
+                const showTooltip = (e) => {
                     donutTooltip.textContent = `${circle.dataset.el}: ${circle.dataset.pct}%`;
                     donutTooltip.style.opacity = '1';
-                });
+                    if (e.clientX && e.clientY) {
+                        donutTooltip.style.left = (e.clientX + 12) + 'px';
+                        donutTooltip.style.top = (e.clientY - 30) + 'px';
+                    } else {
+                        // Fallback position for keyboard focus
+                        const rect = donutChart.getBoundingClientRect();
+                        donutTooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                        donutTooltip.style.top = (rect.top - 20) + 'px';
+                    }
+                };
+
+                const hideTooltip = () => {
+                    donutTooltip.style.opacity = '0';
+                };
+
+                circle.addEventListener('mouseenter', showTooltip);
+                circle.addEventListener('focus', showTooltip);
+
                 circle.addEventListener('mousemove', (e) => {
                     donutTooltip.style.left = (e.clientX + 12) + 'px';
                     donutTooltip.style.top = (e.clientY - 30) + 'px';
                 });
-                circle.addEventListener('mouseleave', () => {
-                    donutTooltip.style.opacity = '0';
-                });
+
+                circle.addEventListener('mouseleave', hideTooltip);
+                circle.addEventListener('blur', hideTooltip);
             });
         }
 
@@ -847,10 +864,14 @@
         async function predict() {
             loadingBar.style.opacity = '1';
             try {
+                const payload = {
+                    category: currentCategory,
+                    elements: state
+                };
                 const res = await fetch('/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(state)
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
 
@@ -867,10 +888,9 @@
                 animateValue(strengthEl, oldStrength, data.strength, 400);
                 animateValue(scoreEl, oldScore, data.score, 400);
 
-                // Pulse glow on the score tile
-                scoreTile.classList.remove('pulse');
-                void scoreTile.offsetWidth; // trigger reflow to restart animation
-                scoreTile.classList.add('pulse');
+                // Brief opacity pulse instead of glowing
+                scoreTile.style.opacity = '0.5';
+                setTimeout(() => { scoreTile.style.opacity = '1'; }, 200);
 
                 resultsComp = data.composition;
 

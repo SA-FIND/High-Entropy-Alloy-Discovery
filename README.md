@@ -1,180 +1,112 @@
-<div align="center">
+# MetaForge: Machine Learning-Accelerated High Entropy Alloy Discovery
 
-# MetaForge
-**ML-Powered High Entropy Alloy Discovery**
+## Overview
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-metaforge--web.onrender.com-00C853?style=for-the-badge)](https://metaforge-web.onrender.com/)
-[![Render](https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://metaforge-web.onrender.com/)
+MetaForge is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines materials data from the Materials Project with physics-informed machine learning, genetic algorithms for inverse design, and graph neural network structural relaxation.
 
-[![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![Flask 3.1.3](https://img.shields.io/badge/Flask-3.1.3-black?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![React 18](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://reactjs.org/)
-[![Materials Project](https://img.shields.io/badge/Materials%20Project-API-00c853?style=flat-square)](https://materialsproject.org/)
-[![CHGNet](https://img.shields.io/badge/CHGNet-GNN-ff6f00?style=flat-square)](https://github.com/CederGroupHub/chgnet)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-
-An end-to-end computational materials science pipeline for discovering optimal High Entropy Alloys (HEAs) for diverse applications including aerospace, corrosion resistance, refractory, and lightweight structural purposes. Combines data harvesting from the Materials Project, physics-informed machine learning, genetic algorithm-driven inverse design and ML interatomic potential relaxation.
-
-</div>
-
----
-
-## 🚀 Live Demo
-
-**Try the app now →** [metaforge-web.onrender.com](https://metaforge-web.onrender.com/)
-
-> **Note:** The first visit may take ~1 minute to wake up while it loads the ML models. Subsequent requests are instant.
-
----
+A live demonstration of the inference engine is available at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/). Note that the free-tier server sleeps after inactivity and may require up to a minute to wake up on the first visit.
 
 ## Core Features
 
-> **Combinatorial Engine**<br>
-> Generates thousands of theoretical alloy compositions (`2229) and filters them using physics-based stability rules (lattice strain δ, VEC thresholds).
+- **Combinatorial Engine:** Generates candidate alloy compositions and filters them using established physical metallurgy rules (e.g., lattice strain limits δ < 6.6% and specific VEC phase thresholds).
+- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict bulk density and shear strength directly from elemental compositions.
+- **Inverse Design:** A custom genetic algorithm evolves alloy compositions over multiple generations to maximize specific strength (strength-to-weight ratio).
+- **Structure Relaxation:** Optimizes 54-atom Special Quasirandom Structure (SQS) supercell blueprints using the CHGNet graph neural network interatomic potential.
+- **Web Interface:** A lightweight Flask and React interface for real-time model inference.
 
-> **ML Property Prediction**<br>
-> Trains RandomForest models on 132 Matminer Magpie descriptors to predict density and shear strength from composition.
+## Model Performance & Discovered Candidates
 
-> **Genetic Algorithm Inverse Design**<br>
-> Evolves alloy compositions over 20 generations to maximize specific strength (strength-to-weight ratio).
+The pipeline currently supports four distinct HEA categories. The empirical validation metrics for the Random Forest models and the top candidates identified by the genetic algorithm are detailed below:
 
-> **CHGNet Structure Relaxation**<br>
-> Relaxes 54-atom supercell blueprints using a graph neural network interatomic potential.
+### 1. Refractory Alloys (BCC)
+- **Density Model:** RMSE 0.046 g/cm³, R² 0.998
+- **Strength Model:** RMSE 0.740 GPa, R² 0.995
+- **Top Candidate:** W_9.4 Mo_70.2 Ta_1.6 Nb_7.6 V_11.3
+- **Specific Strength:** 11.35 GPa/(g/cm³)
 
-> **Real-Time Web Interface**<br>
-> Flask app with interactive composition sliders, live ML predictions, and a composition donut chart.
+### 2. Corrosion-Resistant Alloys (FCC)
+- **Density Model:** RMSE 0.013 g/cm³, R² 0.993
+- **Strength Model:** RMSE 0.153 GPa, R² 0.999
+- **Top Candidate:** Co_5.3 Cr_40.1 Fe_41.3 Ni_1.8 Cu_11.6
+- **Specific Strength:** 11.40 GPa/(g/cm³)
 
----
+### 3. Lightweight Alloys
+- **Density Model:** RMSE 0.023 g/cm³, R² 0.998
+- **Strength Model:** RMSE 0.161 GPa, R² 0.998
+- **Top Candidate:** Al_36.4 Mg_12.7 Li_16.2 Ti_33.4 Zn_1.2
+- **Specific Strength:** 9.84 GPa/(g/cm³)
+
+### 4. Aerospace Alloys
+*Note: Due to issues with Li and Mg co-existing in aerospace structural applications, a separate category was engineered (Al-Ti-Sc-Zr-V) to bypass those specific reactivity constraints.*
+- **Density Model:** RMSE 0.043 g/cm³, R² 0.982
+- **Strength Model:** RMSE 0.216 GPa, R² 0.982
+- **Top Candidate:** Al_29.9 Ti_35.1 Sc_31.1 Zr_0.7 V_3.2
+- **Specific Strength:** 9.35 GPa/(g/cm³)
 
 ## Architecture & Data Flow
 
-```mermaid
-flowchart TD
-    A[Materials Project API] -->|Atomic radii, density, VEC| B(Combinatorial Engine)
-    B -->|δ < 6.6 + VEC rules| C(Feature Engineering)
-    C -->|132 Magpie descriptors| D(ML Model Training)
-    D -->|Density + Strength Predictors| E(Genetic Algorithm)
-    E -->|Maximize specific strength| F(Crystal Blueprint)
-    F -->|54-atom BCC supercell| G(Structure Relaxation)
-    G -->|CHGNet FIRE optimizer| H[Optimized Alloy CIF]
-    
-    D -.->|Export models| I(Flask Web Backend)
-    I <-->|POST /predict| J[React Web Interface]
-```
-
----
+1. **Data Harvesting:** Atomic radii, density, and VEC data are queried from the Materials Project API.
+2. **Feature Engineering:** Compositions are filtered by phase rules and featurized into 132 Magpie descriptors.
+3. **Training:** Scikit-learn Random Forests map descriptors to density and strength.
+4. **Optimization:** Genetic Algorithm maximizes specific strength.
+5. **Blueprint Generation:** 54-atom BCC/FCC supercells are outputted as CIF files for CHGNet relaxation.
 
 ## Tech Stack
 
-**Core Engineering**<br>
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-![Pymatgen](https://img.shields.io/badge/Pymatgen-2026.5.4-blue?style=flat-square)
-![Matminer](https://img.shields.io/badge/Matminer-0.10.1-blue?style=flat-square)
-
-**Machine Learning**<br>
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.8.0-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)
-![CHGNet](https://img.shields.io/badge/CHGNet-0.4.1-F7931E?style=flat-square)
-![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white)
-![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white)
-
-**Web Application**<br>
-![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)
-
----
+- **Core Engineering:** Python 3.13+, Pymatgen, Matminer
+- **Machine Learning:** Scikit-learn, CHGNet, NumPy, Pandas, Joblib
+- **Web Application:** Flask, React, Tailwind CSS
 
 ## Quickstart
 
-<details open>
-<summary><b>1. Environment Setup</b></summary>
+### 1. Environment Setup
 
 ```bash
-# Clone repository
 git clone https://github.com/SA-FIND/High-Entropy-Alloy-Discovery.git
 cd High-Entropy-Alloy-Discovery
 
 # Create and activate virtual environment (Windows PowerShell)
 python -m venv pymatgenenv
-.\----\Scripts\Activate.ps1
+.\pymatgenenv\Scripts\Activate.ps1
 
-# Install core dependencies
+# Install dependencies
 pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib matminer chgnet flask flask-cors joblib
 ```
-</details>
 
-<details>
-<summary><b>2. Configure API Keys</b></summary>
+### 2. Configure API Keys
 
-Create a `.env` file in the root directory and add your Materials Project API key:
+Create a `.env` file in the root directory and add your Materials Project API key. This is only required for automated data harvesting in the master script.
 
 ```bash
-# .env
 MY_API_KEY=your_materials_project_api_key_here
 ```
-*(Only required for data harvesting in Jupyter notebooks)*
-</details>
 
-<details>
-<summary><b>3. Launch Web Application</b></summary>
+### 3. Execution
 
-Navigate to the web directory and start the Flask server using the virtual environment:
+You can run the full machine learning pipeline sequentially by executing the master script:
+
+```bash
+python run_master.py
+```
+This will train the 8 models, run the genetic algorithm, and output `.cif` structure files.
+
+To launch the local web server:
 
 ```bash
 cd MetaForge-Web
-..\----\Scripts\python.exe app.py
+..\pymatgenenv\Scripts\python.exe app.py
 ```
-</details>
-
----
-
-## Model Performance
-
-| Metric | Density Model | Strength Model |
-|--------|--------------|----------------|
-| **Algorithm** | Random Forest | Random Forest |
-| **Features** | 132 Magpie descriptors | 132 Magpie descriptors |
-| **RMSE** | 0.073 g/cm³ | 0.539 GPa |
-| **Training Set** | 5,000 synthetic alloys | 5,000 synthetic alloys |
-
-### Top Discovered Candidate (Genetic Algorithm)
-
-| Property | Value |
-|----------|-------|
-| **Composition** | W₀.₁₀ Mo₀.₄₀ Ta₀.₀₅ Nb₀.₀₅ V₀.₄₀ |
-| **Predicted Density** | 9.68 g/cm³ |
-| **Predicted Strength** | 90.71 GPa |
-| **Specific Strength** | 9.37 GPa·cm³/g |
-
----
-
-## Physics & Stability Filters
-
-| HEA Family | Crystal Structure | Lattice Strain (δ) | VEC Range |
-|------------|-------------------|---------------------|-----------|
-| **Refractory** | BCC | δ < 6.6% | 5.0 ≤ VEC ≤ 6.8 |
-| **Corrosion-Resistant** | FCC | δ < 6.6% | VEC ≥ 8.0 |
-| **Lightweight** | Mixed/HCP | δ < 6.6% | — |
-
----
 
 ## Deployment
 
-This project is deployed on [Render](https://render.com/) using the included `render.yaml` Blueprint. To deploy your own instance:
-
-1. Fork this repository
-2. Create a free account on [Render](https://render.com/)
-3. Click **New+ → Blueprint** and connect your fork
-   
-
----
+This repository includes a `render.yaml` Blueprint for direct deployment on Render. The static frontend communicates with a Gunicorn-wrapped Flask backend to serve the machine learning models.
 
 ## License & Attribution
 
 This project is open-source under the MIT License.
 
-Special thanks to the foundational work by:
-- **Materials Project**, Jain et al., APL Materials, 2013
-- **Matminer**, Ward et al., Comput. Mater. Sci., 2018
-- **CHGNet**, Deng et al., Nature Machine Intelligence, 2023
-- **Pymatgen**, Ong et al., Comput. Mater. Sci., 2013
+Key dependencies:
+- Materials Project (Jain et al., APL Materials, 2013)
+- Matminer (Ward et al., Comput. Mater. Sci., 2018)
+- CHGNet (Deng et al., Nature Machine Intelligence, 2023)
+- Pymatgen (Ong et al., Comput. Mater. Sci., 2013)

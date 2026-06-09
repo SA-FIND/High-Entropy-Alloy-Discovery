@@ -30,21 +30,62 @@ def set_security_headers(response):
     response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' *"
     return response
 
-# Loading regression models and Matminer Magpie features
+# Loading category-specific regression models and Matminer Magpie features
 logger.info("Loading MetaForge ML Models...")
-ml_density = joblib.load('ml_density.model')
-ml_strength = joblib.load('ml_strength.model')
+models = {
+    "Refractory Alloy": {},
+    "Corrosion Resistance": {},
+    "Lightweight Alloy": {},
+    "Aerospace Alloy": {}
+}
+
+categories_map = {
+    "Refractory Alloy": "Refractory",
+    "Corrosion Resistance": "Corrosion",
+    "Lightweight Alloy": "Lightweight",
+    "Aerospace Alloy": "Aerospace"
+}
+
+for web_cat, file_cat in categories_map.items():
+    try:
+        models[web_cat]['density'] = joblib.load(f'ml_density_{file_cat}.model')
+        models[web_cat]['strength'] = joblib.load(f'ml_strength_{file_cat}.model')
+        logger.info(f"Loaded models for {web_cat}.")
+    except Exception as e:
+        logger.warning(f"Could not load models for {web_cat}: {e}")
+
 ep_feat = ElementProperty.from_preset("magpie")
-logger.info("Models loaded successfully.")
+logger.info("All components initialized successfully.")
 
 @app.route('/')
 def home():
-    """Renders the single-page application with strict cache-busting headers."""
+    """Renders the single-page application."""
     response = make_response(render_template('index.html'))
-    # Ensuring browser always fetches the latest UI updates
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
+    # Allow standard caching but require revalidation
+    response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+    return response
+
+@app.route('/robots.txt')
+def robots():
+    """Returns robots.txt for search engine crawlers."""
+    content = "User-agent: *\nAllow: /\nSitemap: https://metaforge-web.onrender.com/sitemap.xml\n"
+    response = make_response(content)
+    response.headers['Content-Type'] = 'text/plain'
+    return response
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Returns sitemap.xml for search engines."""
+    content = '''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+   <url>
+      <loc>https://metaforge-web.onrender.com/</loc>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+   </url>
+</urlset>'''
+    response = make_response(content)
+    response.headers['Content-Type'] = 'application/xml'
     return response
 
 @app.route('/predict', methods=['POST'])
@@ -54,13 +95,24 @@ def predict():
         if not data or not isinstance(data, dict):
             return jsonify({'error': 'Invalid JSON payload provided.'}), 400
 
-        # Extracting elements dynamically from frontend payload
-        elements = list(data.keys())
+        category = data.get("category")
+        elements_data = data.get("elements", {})
+        
+        if not category or not elements_data:
+            return jsonify({'error': 'Missing category or elements.'}), 400
+            
+        if category not in models or 'density' not in models[category]:
+            return jsonify({'error': f'Models not found for category: {category}.'}), 400
+
+        ml_density = models[category]['density']
+        ml_strength = models[category]['strength']
+
+        elements = list(elements_data.keys())
         raw_values = []
         
         # Extracting elemental weights
         for el in elements:
-            val = data.get(el, 0)
+            val = elements_data.get(el, 0)
             try:
                 raw_values.append(float(val))
             except (ValueError, TypeError):

@@ -1,7 +1,7 @@
 # Research Proposal: Machine Learning-Accelerated Discovery of Multi-Principal Element Alloys for Extreme Environments
 
 **Principal Investigator:** Solomon Ahedor  
-**Affiliation:** Kwame Nkrumah University of Science and Technology, Department of Metallurgical & Materials Engineering (Year 4)  
+**Affiliation:** Department of Metallurgical & Materials Engineering (Year 4)  
 **Project:** MetaForge — ML-Driven High Entropy Alloy Discovery Platform  
 **Date:** May 2026
 
@@ -9,16 +9,16 @@
 
 ## Abstract
 
-High Entropy Alloys (HEAs) represent a paradigm shift in materials design, offering unprecedented combinations of strength, corrosion resistance, and thermal stability. However, the vast combinatorial space of multi-principal element alloys makes traditional trial-and-error discovery prohibitively slow and expensive. This project presents **MetaForge**, an end-to-end computational pipeline that combines data harvesting from the Materials Project, physics-informed machine learning, genetic algorithm-driven inverse design, and graph neural network (GNN) structural relaxation to accelerate HEA discovery.
+Finding the right high-entropy alloy (HEA) used to mean years of expensive trial and error in the lab. While these materials offer amazing thermal stability and strength, their design space is simply too massive to explore manually. This project introduces MetaForge. It’s an end-to-end computational pipeline that leverages physics-informed machine learning and data harvested from the Materials Project to dramatically speed up HEA discovery.
 
-To date, the pipeline has achieved:
+So far, the pipeline has achieved some strong baseline results:
 
-- **Density prediction RMSE of 0.073 g/cm³** and **strength prediction RMSE of 0.539 GPa** using Random Forest models trained on 132 Matminer Magpie descriptors across 5,000 synthetic alloy compositions.
-- Successful identification of a refractory HEA candidate (**W₀.₁₀Mo₀.₄₀Ta₀.₀₅Nb₀.₀₅V₀.₄₀**) with a predicted specific strength of **9.37 GPa·cm³/g**.
-- CHGNet-relaxed 3×3×3 BCC supercells (54 atoms) for structural validation.
-- A live, publicly accessible web interface deployed at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/).
+- Using Random Forest models trained on 132 Matminer Magpie descriptors across 5,000 synthetic alloy compositions, we hit a density prediction RMSE of 0.073 g/cm³ and a strength prediction RMSE of 0.539 GPa.
+- We successfully pinned down a promising refractory HEA candidate (W₀.₁₀Mo₀.₄₀Ta₀.₀₅Nb₀.₀₅V₀.₄₀) with a predicted specific strength of 9.37 GPa·cm³/g.
+- The pipeline handles structural validation through CHGNet-relaxed 3×3×3 BCC supercells (54 atoms).
+- A live version of the tool is up and running at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/).
 
-This proposal outlines the next phase of research: DFT validation, expanded training data, additional property prediction targets, and experimental synthesis of top candidates.
+This proposal maps out what comes next. The immediate focus will be on DFT validation, feeding more data into the training set, adding new prediction targets, and finally synthesizing the top candidates in the lab.
 
 ---
 
@@ -26,19 +26,21 @@ This proposal outlines the next phase of research: DFT validation, expanded trai
 
 ### 1.1 The Promise of High Entropy Alloys
 
-Conventional alloys are designed around one or two principal elements (e.g., Fe in steel, Al in aerospace alloys). High Entropy Alloys, first reported independently by Yeh et al. (2004) and Cantor et al. (2004), break this paradigm by combining five or more elements in near-equiatomic proportions. The high configurational entropy stabilizes simple solid-solution phases (BCC, FCC, HCP), producing materials with remarkable properties:
+Most conventional alloys rely on one or two base elements—like iron in steel or aluminum in aerospace parts. High Entropy Alloys (first brought to light around 2004 by Yeh and Cantor) completely change the rulebook. They mix five or more elements in roughly equal amounts. Because of the high configurational entropy, they tend to stabilize into simple solid-solution phases like BCC, FCC, or HCP rather than brittle intermetallics.
 
-- **Refractory HEAs** (e.g., W-Mo-Ta-Nb-V): Retain strength above 1000°C, making them candidates for next-generation turbine blades and nuclear reactor components.
-- **Corrosion-resistant HEAs** (e.g., Co-Cr-Fe-Ni-Cu): Outperform conventional stainless steels in marine and chemical processing environments.
-- **Lightweight HEAs** (e.g., Al-Mg-Li-Ti-Zn): Target aerospace applications where specific strength (strength-to-weight ratio) is the critical metric.
+This leads to some performance benefits:
+
+- **Refractory HEAs** (think W-Mo-Ta-Nb-V) can hold their strength well past 1000°C. That makes them highly attractive for nuclear reactor internals or next-gen turbine blades.
+- **Corrosion-resistant HEAs** (like Co-Cr-Fe-Ni-Cu) tend to hold up much better than standard stainless steels when exposed to harsh marine or chemical environments.
+- **Lightweight HEAs** (Al-Mg-Li-Ti-Zn) are mostly aimed at aerospace, where shaving off weight without losing strength is everything.
 
 ### 1.2 The Combinatorial Explosion Problem
 
-With ~70 metallic elements in the periodic table, the number of possible 5-element equiatomic combinations exceeds **12 million**. Even restricting to non-equiatomic compositions at 5% increments yields millions more candidates. Experimental synthesis and characterization of even a fraction of this space is economically infeasible.
+There are roughly 70 metallic elements on the periodic table. If you want to make a 5-element equiatomic alloy, you're looking at over 12 million possible combinations. And if you start tweaking the percentages by just 5% increments, that number explodes into the hundreds of millions. Testing even a tiny fraction of these in a physical lab is economically impossible.
 
 ### 1.3 Machine Learning as an Accelerator
 
-Machine learning models trained on physics-derived descriptors (atomic radii, electronegativity, valence electron concentration) can screen millions of candidates in seconds. The key insight is that **material properties are encoded in composition**, and composition can be mathematically represented using established descriptor frameworks like Matminer's Magpie preset (132 features derived from elemental properties).
+This is where machine learning comes in. Models trained on basic physics descriptors—atomic radii, electronegativity, valence electron concentration—can churn through millions of candidate alloys in seconds. The core idea here is that an alloy's properties are deeply tied to its composition. By converting that composition into mathematical features using frameworks like Matminer's Magpie preset (which generates 132 distinct elemental features), we can teach an algorithm to spot the winners.
 
 ---
 
@@ -46,15 +48,13 @@ Machine learning models trained on physics-derived descriptors (atomic radii, el
 
 ### 2.1 Data Pipeline
 
-- Harvested elemental properties (atomic radii, density, VEC, electronegativity) for 17 elements across 4 HEA families from the **Materials Project API**.
-- Built a combinatorial engine using the itertools library that generates thousands of candidate compositions and filters them using physics-based stability criteria:
-  - Lattice strain δ < 6.6% (Hume-Rothery rules)
-  - VEC thresholds for phase prediction (BCC: 5.0–6.8, FCC: ≥8.0)
+- I started by pulling elemental data (atomic radii, density, VEC, electronegativity) directly from the Materials Project API. This covered 17 different elements across 4 main HEA families.
+- From there, I built a combinatorial engine to generate candidate mixtures and filter out the bad ones using standard physical stability rules. Specifically, I set the lattice strain cutoff at δ < 6.6% to satisfy Hume-Rothery rules and used VEC thresholds to predict the phase (5.0–6.8 for BCC, ≥8.0 for FCC).
 
 ### 2.2 Machine Learning Models
 
-- Featurized all candidate compositions into 132-dimensional Magpie descriptor vectors using **Matminer**.
-- Trained **Random Forest** regression models on 5,000 synthetic alloy compositions spanning all 17 elements.
+- Every candidate composition was featurized into a 132-dimensional Magpie vector.
+- I then trained Random Forest regression models on a synthetic dataset of 5,000 alloys.
 
 | Model | Target | RMSE | R² |
 |-------|--------|------|----|
@@ -63,8 +63,8 @@ Machine learning models trained on physics-derived descriptors (atomic radii, el
 
 ### 2.3 Genetic Algorithm Inverse Design
 
-- Implemented a genetic algorithm that evolves alloy compositions over 20 generations to **maximize specific strength** (strength/density).
-- The GA discovered an optimal refractory candidate:
+- To push beyond random screening, I wrote a genetic algorithm that intentionally evolves compositions over 20 generations to maximize the strength-to-weight ratio (specific strength).
+- The algorithm eventually isolated a standout refractory candidate:
 
 | Property | Value |
 |----------|-------|
@@ -75,18 +75,17 @@ Machine learning models trained on physics-derived descriptors (atomic radii, el
 
 ### 2.4 Structural Relaxation (The Compute Breakthrough)
 
-A critical milestone was achieved by scaling the crystal simulation to **3×3×3 BCC supercells (54 atoms)**. Initial attempts on a local 8GB laptop and Google Colab (12GB) failed due to insufficient memory. By optimizing the cell size and leveraging **CHGNet** (a graph neural network interatomic potential), I successfully:
+One of the biggest hurdles was scaling the crystal simulations to 3×3×3 BCC supercells (54 atoms). Standard local hardware (like my 8GB laptop) and free cloud tiers completely choked on the memory requirements. The workaround was leveraging CHGNet—a graph neural network interatomic potential. This allowed us to:
 
-- Built 54-atom Special Quasirandom Structures (SQS) for top candidates.
-- Relaxed atomic positions using the FIRE optimizer with CHGNet as the energy/force calculator.
-- Exported optimized structures as CIF files for further analysis.
-- These .cif files are available to view in crystal structure web viewers
+- Construct 54-atom Special Quasirandom Structures (SQS) for the best candidates.
+- Relax the atomic positions using the FIRE optimizer, with CHGNet handling the energy and force calculations.
+- Export the optimized blueprints as CIF files so they can be analyzed further.
 
 ### 2.5 Web Deployment
 
-- Built a full-stack web application (**Flask** backend + **React** frontend) that allows users to interactively adjust alloy compositions and receive real-time ML predictions.
-- Deployed the application at: **[metaforge-web.onrender.com](https://metaforge-web.onrender.com/)**
-- Open-sourced the full codebase: **[github.com/SA-FIND/High-Entropy-Alloy-Discovery](https://github.com/SA-FIND/High-Entropy-Alloy-Discovery)**
+- I wrapped the whole prediction engine into a full-stack web app, pairing a Flask backend with a React frontend. Users can drag sliders to adjust the alloy composition and instantly see how the ML model reacts.
+- It’s live right now at: **[metaforge-web.onrender.com](https://metaforge-web.onrender.com/)**
+- The repository is fully open-source and hosted at **[github.com/SA-FIND/High-Entropy-Alloy-Discovery](https://github.com/SA-FIND/High-Entropy-Alloy-Discovery)**.
 
 ---
 
@@ -94,57 +93,51 @@ A critical milestone was achieved by scaling the crystal simulation to **3×3×3
 
 ### 3.1 DFT Validation of Top Candidates
 
-**Objective:** Validate ML predictions using first-principles Density Functional Theory (DFT) calculations. 
+**Objective:** Check the ML predictions against first-principles Density Functional Theory (DFT) calculations.
 
-(As an undergraduate student, I am still learning computational materials with a focus on material informatics)
-
-- Perform full structural relaxation and total energy calculations using **VASP** or **Quantum ESPRESSO** on the top 5 GA-discovered candidates.
-- Calculate elastic constants (C₁₁, C₁₂, C₄₄) to derive bulk modulus, shear modulus, and Young's modulus from first principles.
-- Compare DFT-predicted properties against ML predictions to quantify model accuracy and identify systematic biases.
+- I plan to run full structural relaxations and total energy calculations on the top 5 candidates using VASP or Quantum ESPRESSO.
+- By calculating the elastic constants (C₁₁, C₁₂, C₄₄), I can derive the bulk, shear, and Young's moduli from the ground up.
+- This will let me compare the DFT results directly against the ML outputs to see where the model is biased.
 
 ### 3.2 Expanded Training Data
 
-**Objective:** Improve model generalization by incorporating experimental and CALPHAD data.
+**Objective:** Feed the model more realistic data (like experimental and CALPHAD results) so it generalizes better.
 
-- Integrate experimental HEA property data from published literature (Senkov et al., Miracle et al.).
-- Incorporate **CALPHAD** (Calculation of Phase Diagrams) data for thermodynamic validation of predicted stable phases.
-- Expand the training set from 5,000 to 50,000+ compositions using active learning, where the model identifies compositions it is least confident about and requests targeted DFT calculations.
+- The plan is to scrape published experimental property data from major HEA studies (e.g., Senkov, Miracle).
+- I also want to pull in CALPHAD (Calculation of Phase Diagrams) data to verify that the predicted phases actually match thermodynamic reality.
+- Long term, the goal is to grow the training set from 5,000 up to 50,000+ compositions via active learning. The model will essentially flag the compositions it’s least sure about and request targeted DFT runs.
 
 ### 3.3 Additional Property Prediction Targets
 
-**Objective:** Expand the ML pipeline beyond density and strength.
+**Objective:** Make the pipeline predict more than just density and strength.
 
-- **Corrosion resistance:** Train models to predict pitting potential and passivation behavior.
-- **High-temperature creep resistance:** Predict creep rate at elevated temperatures (800–1200°C).
-- **Thermal conductivity:** Critical for thermal management in aerospace applications.
-- **Hardness (Vickers):** Direct experimental validation metric.
+- **Corrosion resistance:** I want to predict pitting potentials and how the alloy might passivate.
+- **High-temperature creep:** Specifically looking at creep rates when things get hot (800–1200°C).
+- **Thermal conductivity:** This is a huge deal for aerospace applications.
+- **Hardness (Vickers):** A practical metric we can easily test in the lab.
 
 ### 3.4 Experimental Synthesis & Characterization
 
-**Objective:** Physically validate the top 3 ML-discovered candidates.
+**Objective:** Actually make the top 3 discovered alloys in the real world.
 
-- **Arc melting:** Synthesize top candidates using vacuum arc melting with high-purity elemental feedstocks.
-- **XRD analysis:** Confirm predicted crystal structure (BCC/FCC) and detect any secondary phases.
-- **Microhardness testing:** Vickers hardness measurements to validate strength predictions.
-- **SEM/EDS:** Characterize microstructure and confirm elemental homogeneity.
-- **Corrosion testing:** Potentiodynamic polarization in simulated seawater (for corrosion-resistant candidates).
+- **Arc melting:** We’ll synthesize the best candidates using vacuum arc melting with high-purity metals.
+- **XRD analysis:** This will confirm if we actually got the predicted BCC/FCC structure or if nasty secondary phases popped up.
+- **Microhardness testing:** Taking Vickers hardness readings to see if the strength predictions hold any weight.
+- **SEM/EDS:** Looking at the microstructure to make sure the elements mixed evenly.
+- **Corrosion testing:** Running potentiodynamic polarization in simulated seawater for the corrosion-focused alloys.
 
 ### 3.5 Publication
 
 **Target journals (in order of preference):**
 
-1. *Computational Materials Science* (Elsevier) — directly aligned with the ML+materials theme.
-2. *Journal of Alloys and Compounds* (Elsevier) — strong HEA readership.
-3. *Acta Materialia* (Elsevier) — high-impact, if experimental validation is included.
+1. *Computational Materials Science* (Elsevier) — Fits perfectly with the ML and materials overlap.
+2. *Journal of Alloys and Compounds* (Elsevier) — They have a huge HEA audience.
+3. *Acta Materialia* (Elsevier) — A bit ambitious, but possible if the experimental validation turns out well.
 
 **Target conferences:**
 
-- TMS Annual Meeting — Computational Materials Science symposium
-- MRS Spring Meeting — Machine Learning for Materials Discovery
-
-( I am willing to learn under good guildance in the exploration of computational materials)
-This project was primary inspired by Prof. Emmanuel Kwesi Arthur at KNUST (https://webapps.knust.edu.gh/staff/dirsearch/profile/summary/2d5b0c584928.html) on his teaching of non-ferrous alloys, Prof. Kwadwo Mensah-Darkwa at KNUST on his teaching of MatLab and software related program at the materials and metallurgical department (https://webapps.knust.edu.gh/staff/dirsearch/profile/summary/0719f2655b8c.html) and Prof. Taylor Sparks on his teaching of materials informatics at the University of Utah. (https://profiles.faculty.utah.edu/u0203991)
-
+- TMS Annual Meeting (specifically the Computational Materials Science symposium)
+- MRS Spring Meeting (Machine Learning for Materials Discovery track)
 
 ---
 
@@ -152,11 +145,11 @@ This project was primary inspired by Prof. Emmanuel Kwesi Arthur at KNUST (https
 
 | Resource | Requirement | Justification |
 |----------|-------------|---------------|
-| **HPC Access** | 500–1,000 CPU-hours | DFT calculations (VASP/QE) for 5 candidate structures |
-| **GPU Access** | 50–100 GPU-hours | CHGNet relaxation of larger supercells (5×5x5) |
-| **Software Licenses** | VASP license | DFT calculations (available through most university HPC centers) |
-| **Lab Access** | Arc melting furnace, XRD, SEM | Experimental synthesis and characterization |
-| **Storage** | ~50 GB | DFT output files, expanded training datasets |
+| **HPC Access** | 500–1,000 CPU-hours | Needed for heavy DFT runs (VASP/QE) on the 5 candidate structures. |
+| **GPU Access** | 50–100 GPU-hours | For running CHGNet relaxations on bigger supercells (like 4×4×4, 128 atoms). |
+| **Software Licenses** | VASP license | Most university HPCs already have this, but it’s required for the DFT work. |
+| **Lab Access** | Arc melting furnace, XRD, SEM | Obviously required to physically make and test the samples. |
+| **Storage** | ~50 GB | DFT outputs and expanded datasets take up a decent amount of space. |
 
 ---
 
@@ -164,31 +157,31 @@ This project was primary inspired by Prof. Emmanuel Kwesi Arthur at KNUST (https
 
 | Month | Milestone |
 |-------|-----------|
-| **Month 1–2** | DFT validation of top 5 candidates; expand training data with literature values |
-| **Month 3** | Train expanded ML models with new property targets (corrosion, creep, hardness) |
-| **Month 4** | Experimental synthesis of top 3 candidates (arc melting) |
-| **Month 5** | Characterization (XRD, SEM/EDS, microhardness, corrosion testing) |
-| **Month 6** | Manuscript preparation and submission |
+| **Month 1–2** | Get the DFT validation done for the top 5 candidates. Start pulling literature values to expand the training data. |
+| **Month 3** | Retrain the models with the new targets (hardness, creep, etc.). |
+| **Month 4** | Head to the lab and arc melt the top 3 candidates. |
+| **Month 5** | Run the characterization tests (XRD, SEM/EDS, corrosion checks). |
+| **Month 6** | Write up the results and submit the manuscript. |
 
 ---
 
 ## 6. Collaboration Value
 
-This project brings a **complete, functional ML pipeline** to the research group. The existing codebase includes:
+This project provides a fully functional, end-to-end ML pipeline that the research group can start using immediately. The current codebase already handles:
 
-- A fully automated data harvesting → featurization → training → optimization pipeline.
-- Pre-trained universal models covering 17 elements across 4 HEA families.
-- A live web deployment for interactive exploration.
-- Open-source code ready for extension.
+- Automated data harvesting, featurization, and optimization.
+- Universal models that work across 17 elements and 4 HEA categories.
+- A live web interface for quick checks.
+- Clean, open-source code that is easy to build upon.
 
-The primary areas where **collaboration with the research groups, Professors and PhD students** would be invaluable:
+To really push this forward, working with the group's current PhD students would be a massive help in a few key areas:
 
-1. **DFT expertise:** Running and interpreting VASP/QE calculations.
-2. **Experimental synthesis:** Access to arc melting equipment and characterization facilities.
-3. **Domain knowledge:** Deep understanding of HEA thermodynamics, phase stability, material selection and quality assurance, computational materials, characterisation, mechanical behavior, etc.
-4. **Publication mentorship:** Guidance on manuscript preparation for high-impact journals.
+1. **DFT expertise:** Getting VASP/QE jobs to converge properly can be tricky, and hands-on help would save a lot of time.
+2. **Experimental synthesis:** I’ll need guidance on the arc melting and characterization equipment.
+3. **Domain knowledge:** Deep insights into HEA thermodynamics and phase stability.
+4. **Publication mentorship:** Getting advice on how to structure the paper for a high-impact journal.
 
-In return, this project contributes ML infrastructure, web deployment capabilities, and a novel screening methodology that can be applied to a group's broader research portfolio.
+In exchange, this project brings a modern machine learning infrastructure and web deployment toolkit to the lab, which could easily be adapted to screen other types of materials the group is studying.
 
 ---
 
