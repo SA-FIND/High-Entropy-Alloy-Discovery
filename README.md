@@ -7,7 +7,7 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines materials data from the Materials Project with physics-informed machine learning, genetic algorithms for inverse design, and graph neural network structural relaxation.
 
-A live demonstration of the inference engine is available at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/). *(Note: the free-tier server sleeps after inactivity and may require up to a minute to wake up on the first visit.)*
+A live demonstration of the inference engine is available at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/). *(Note:server sleeps after inactivity and may require up to a minute to wake up on the first visit.)*
 
 ---
 
@@ -44,8 +44,6 @@ The pipeline currently supports four distinct HEA categories. The empirical vali
 - **Specific Strength:** 9.84 GPa/(g/cm³)
 
 ### 4. Aerospace Alloys
-> **Note:** Due to issues with Li and Mg co-existing in aerospace structural applications, a separate category was engineered (`Al-Ti-Sc-Zr-V`) to bypass those specific reactivity constraints.
-
 - **Density Model:** RMSE 0.043 g/cm³ | R² 0.982
 - **Strength Model:** RMSE 0.216 GPa | R² 0.982
 - **Top Candidate:** `Al:29.9% - Ti:35.1% - Sc:31.1% - Zr:0.7% - V:3.2%`
@@ -92,8 +90,8 @@ git clone https://github.com/SA-FIND/High-Entropy-Alloy-Discovery.git
 cd High-Entropy-Alloy-Discovery
 
 # Create and activate virtual environment (Windows PowerShell)
-python -m venv pymatgenenv
-.\pymatgenenv\Scripts\Activate.ps1
+python -m venv ----
+.\----\Scripts\Activate.ps1
 
 # Install dependencies
 pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib matminer chgnet flask flask-cors joblib
@@ -122,7 +120,7 @@ To launch the local web server and interact with the trained models:
 
 ```bash
 cd MetaForge-Web
-..\pymatgenenv\Scripts\python.exe app.py
+..\----\Scripts\python.exe app.py
 ```
 
 ---
