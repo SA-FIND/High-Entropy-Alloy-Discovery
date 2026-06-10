@@ -7,7 +7,7 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines materials data from the Materials Project with physics-informed machine learning, genetic algorithms for inverse design, and graph neural network structural relaxation.
 
-A live demonstration of the inference engine is available at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/). *(Note: the free-tier server sleeps after inactivity and may require up to a minute to wake up on the first visit.)*
+A live demonstration of the inference engine is available at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/). *(Note:server sleeps after inactivity and may require up to a minute to wake up on the first visit.)*
 
 ---
 
@@ -92,8 +92,8 @@ git clone https://github.com/SA-FIND/High-Entropy-Alloy-Discovery.git
 cd High-Entropy-Alloy-Discovery
 
 # Create and activate virtual environment (Windows PowerShell)
-python -m venv pymatgenenv
-.\pymatgenenv\Scripts\Activate.ps1
+python -m venv ----
+.\----\Scripts\Activate.ps1
 
 # Install dependencies
 pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib matminer chgnet flask flask-cors joblib
@@ -122,7 +122,7 @@ To launch the local web server and interact with the trained models:
 
 ```bash
 cd MetaForge-Web
-..\pymatgenenv\Scripts\python.exe app.py
+..\----\Scripts\python.exe app.py
 ```
 
 ---
