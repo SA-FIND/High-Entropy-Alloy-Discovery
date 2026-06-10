@@ -9,6 +9,10 @@
 
 A live demonstration of the inference engine is available at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/). *(Note:server sleeps after inactivity and may require up to a minute to wake up on the first visit.)*
 
+<p align="center">
+  <img src="demo_screenshot.png" alt="MetaForge Web Interface Preview" width="100%">
+</p>
+
 ---
 
 ## Core Features
