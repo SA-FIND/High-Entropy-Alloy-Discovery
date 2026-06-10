@@ -17,6 +17,7 @@ from pymatgen.io.cif import CifWriter
 from matminer.featurizers.composition import ElementProperty
 from pymatgen.core import Composition
 
+# Suppress warnings and load environment variables
 warnings.filterwarnings("ignore")
 load_dotenv()
 api_key = os.getenv("MY_API_KEY")
@@ -37,6 +38,7 @@ shear_moduli = {
     'Ni': 76, 'Cu': 48
 }
 
+# Define master properties for all elements
 master_props = {
     "Refractory": {
         "W": {"r": 1.37, "vec": 6, "density": 19.25},
@@ -67,15 +69,19 @@ master_props = {
         "V": {"r": 1.31, "vec": 5, "density": 6.11}
     }
 }
-print(">>> Starting Comprehensive HEA Discovery <<\\n")
+print(">>> Starting Comprehensive HEA Discovery <<\n")
 
+# Load ElementProperty featurizer
 ep_feat = ElementProperty.from_preset("magpie")
 
-print("\\n[2/3] Running Master Engine (Combinatorial Filter -> ML Training -> GA Inverse Design)...")
+print("\n[2/3] Running Master Engine (Combinatorial Filter -> ML Training -> GA Inverse Design)...")
+
+# Initialize dictionary to store best alloys
 best_alloys_discovered = {}
 
+# Loop over all alloy categories
 for cat, elements_dict in alloy_categories.items():
-    print(f"\\n{'='*50}")
+    print(f"\n{'='*50}")
     print(f"Processing Category: {cat.upper()}")
     print(f"{'='*50}")
     
@@ -83,6 +89,7 @@ for cat, elements_dict in alloy_categories.items():
     allowed_percentages = range(5, 40, 5)
     valid_compositions = []
     
+    # Generate all valid composition combinations
     for combo in itertools.product(allowed_percentages, repeat=len(elements)):
         if sum(combo) == 100:
             comp = dict(zip(elements, [x/100.0 for x in combo]))
@@ -102,8 +109,10 @@ for cat, elements_dict in alloy_categories.items():
         results.append({**comp, 'VEC': round(vec_total, 3), 'Delta': round(delta, 3), 
                         'Target_Density': round(density, 2), 'Target_Strength': round(strength, 2)})
                         
+    # Convert results to dataframe
     df_results = pd.DataFrame(results)
     
+    # Filter results for stability depending on category
     if cat == "Refractory":
         df_stable = df_results[(df_results['Delta'] < 6.6) & (df_results['VEC'] >= 5.0) & (df_results['VEC'] <= 6.8)]
     elif cat == "Corrosion":
@@ -119,7 +128,9 @@ for cat, elements_dict in alloy_categories.items():
         print("  -> Skipping ML: No stable alloys found.")
         continue
         
-    print("\\n  [ML] Generating Magpie descriptors...")
+    print("\n  [ML] Generating Magpie descriptors...")
+    
+    # Generate descriptors using ElementProperty featurizer
     features_list = []
     for _, row in df_stable.iterrows():
         comp_dict = {el: row[el] for el in elements}
@@ -130,12 +141,15 @@ for cat, elements_dict in alloy_categories.items():
     y_density = df_stable['Target_Density'].values
     y_strength = df_stable['Target_Strength'].values
     
+    # Split the dataset for machine learning models
     X_train_d, X_test_d, y_train_d, y_test_d = train_test_split(X, y_density, test_size=0.2, random_state=42)
     X_train_s, X_test_s, y_train_s, y_test_s = train_test_split(X, y_strength, test_size=0.2, random_state=42)
     
+    # Train Random Forest Regressor models for Density and Strength
     ml_density = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1).fit(X_train_d, y_train_d)
     ml_strength = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1).fit(X_train_s, y_train_s)
     
+    # Evaluate ML Models using RMSE and R-Squared
     rmse_d = np.sqrt(mean_squared_error(y_test_d, ml_density.predict(X_test_d)))
     r2_d = r2_score(y_test_d, ml_density.predict(X_test_d))
     rmse_s = np.sqrt(mean_squared_error(y_test_s, ml_strength.predict(X_test_s)))
@@ -145,18 +159,24 @@ for cat, elements_dict in alloy_categories.items():
     print(f"  [ML] Strength Model | RMSE: {rmse_s:.4f} GPa    | R²: {r2_s:.4f}")
     
     os.makedirs("MetaForge-Web", exist_ok=True)
+    
+    # Save the trained models using Joblib
     joblib.dump(ml_density, f"MetaForge-Web/ml_density_{cat}.model")
     joblib.dump(ml_strength, f"MetaForge-Web/ml_strength_{cat}.model")
     
-    print("\\n  [GA] Initializing Genetic Algorithm to find optimum specific strength...")
+    print("\n  [GA] Initializing Genetic Algorithm to find optimum specific strength...")
+    
+    # Define Genetic Algorithm parameters
     POPULATION_SIZE = 50
     GENERATIONS = 20
     MUTATION_RATE = 0.1
     
+    # Define function to generate random alloy composition
     def generate_random_alloy():
         fractions = np.random.dirichlet(np.ones(len(elements)), size=1)[0]
         return {elements[i]: round(fractions[i], 3) for i in range(len(elements))}
 
+    # Define function to evaluate the fitness of an alloy
     def evaluate_fitness(alloy):
         comp_obj = Composition(alloy)
         feats = [ep_feat.featurize(comp_obj)]
@@ -165,12 +185,14 @@ for cat, elements_dict in alloy_categories.items():
         if d <= 0: return 0, d, s
         return s / d, d, s
 
+    # Generate initial population and prepare top score variables
     population = [generate_random_alloy() for _ in range(POPULATION_SIZE)]
     best_alloy_ever = None
     best_score_ever = -1
     best_d = 0
     best_s = 0
 
+    # Run Genetic Algorithm over generations
     for gen in range(GENERATIONS):
         fitness_scores = []
         for alloy in population:
@@ -182,9 +204,11 @@ for cat, elements_dict in alloy_categories.items():
                 best_d = d
                 best_s = s
                 
+        # Sort the population based on fitness score
         sorted_indices = np.argsort(fitness_scores)[::-1]
         top_half = [population[i] for i in sorted_indices[:POPULATION_SIZE//2]]
         
+        # Breed the next generation from top candidates and apply mutation
         next_gen = top_half[:]
         while len(next_gen) < POPULATION_SIZE:
             parent1 = random.choice(top_half)
@@ -202,13 +226,17 @@ for cat, elements_dict in alloy_categories.items():
         population = next_gen
         
     print(f"  [GA] Optimization Complete! Top Specific Strength: {best_score_ever:.2f} GPa/(g/cm³)")
+    
+    # Print out the most optimized alloy combination
     best_str = " - ".join([f"{el}:{v*100:.1f}%" for el, v in best_alloy_ever.items()])
     print(f"       Composition: {best_str}")
     print(f"       Density: {best_d:.2f} g/cm³ | Strength: {best_s:.2f} GPa")
     
     best_alloys_discovered[cat] = best_alloy_ever
     
-    print("\\n  [CIF] Generating 54-atom 3D SQS blueprint for top candidate...")
+    print("\n  [CIF] Generating 54-atom 3D SQS blueprint for top candidate...")
+    
+    # Define atom distribution based on final composition fractions
     TOTAL_ATOMS = 54
     atom_counts = {el: int(round(best_alloy_ever[el] * TOTAL_ATOMS)) for el in elements}
     difference = TOTAL_ATOMS - sum(atom_counts.values())
@@ -216,27 +244,33 @@ for cat, elements_dict in alloy_categories.items():
         max_el = max(atom_counts, key=atom_counts.get)
         atom_counts[max_el] += difference
         
+    # Populate atom list matching the required distribution
     atom_list = []
     for el, count in atom_counts.items():
         atom_list.extend([Species(el, 0)] * count)
     random.seed(42)
     random.shuffle(atom_list)
     
+    # Build cubic lattice and make supercell structure
     lattice = Lattice.cubic(3.25)
     dummy_struct = Structure(lattice, ["H", "H"], [[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]])
     dummy_struct.make_supercell([3, 3, 3])
     
+    # Replace dummy structure items with proper alloy atoms
     for i in range(TOTAL_ATOMS):
         dummy_struct.replace(i, atom_list[i])
         
-    print(f"\\n  [CIF] Relaxing {cat} 54-atom 3D SQS blueprint using CHGNet...")
+    print(f"\n  [CIF] Relaxing {cat} 54-atom 3D SQS blueprint using CHGNet...")
+    
+    # Initialize Structural Optimizer for relaxation
     from chgnet.model.dynamics import StructOptimizer
     relaxer = StructOptimizer()
     
-    # Relax the structure for up to 100 steps
+    # Run relaxation algorithm on generated supercell
     relax_result = relaxer.relax(dummy_struct, steps=100)
     relaxed_struct = relax_result["final_structure"]
     
+    # Save structures as CIF files
     file_name_blueprint = f"Optimal_{cat}_Blueprint.cif"
     CifWriter(dummy_struct).write_file(file_name_blueprint)
     print(f"  [CIF] Saved unrelaxed blueprint to: {file_name_blueprint}")
@@ -245,4 +279,4 @@ for cat, elements_dict in alloy_categories.items():
     CifWriter(relaxed_struct).write_file(file_name_relaxed)
     print(f"  [CIF] Saved relaxed structure to: {file_name_relaxed}")
 
-print("\\n[3/3] Master Script Complete!")
+print("\n[3/3] Master Script Complete!")
