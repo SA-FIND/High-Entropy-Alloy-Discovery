@@ -44,8 +44,6 @@ The pipeline currently supports four distinct HEA categories. The empirical vali
 - **Specific Strength:** 9.84 GPa/(g/cm³)
 
 ### 4. Aerospace Alloys
-> **Note:** Due to issues with Li and Mg co-existing in aerospace structural applications, a separate category was engineered (`Al-Ti-Sc-Zr-V`) to bypass those specific reactivity constraints.
-
 - **Density Model:** RMSE 0.043 g/cm³ | R² 0.982
 - **Strength Model:** RMSE 0.216 GPa | R² 0.982
 - **Top Candidate:** `Al:29.9% - Ti:35.1% - Sc:31.1% - Zr:0.7% - V:3.2%`
