@@ -1,6 +1,4 @@
-**Research Proposal: Machine Learning-Accelerated**
-
-**Discovery of Multi-Principal Element Alloys for Extreme Environments**
+**Research Proposal: Machine Learning-Accelerated Discovery of Multi-Principal Element Alloys for Extreme Environments**
 
 **Principal Investigator:** Solomon Ahedor
 
