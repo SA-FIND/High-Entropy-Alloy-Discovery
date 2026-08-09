@@ -60,13 +60,15 @@ From there, I built a combinatorial engine using the itertools library to genera
 
 Every candidate composition was featurized into a 132-dimensional Magpie vector, this is because machine learning models do not truly understand chemicals unless transferred into a matrix mathematical formula.
 
-I then trained Random Forest regression models on a synthetic dataset of 5,000 alloys.
+I then trained Random Forest regression models on the filtered compositions.
+
+> **Transparency Note:** The current training targets are **rule-of-mixtures analytical proxies** — density is a composition-weighted average of elemental densities, and strength uses a simplified Varvenne-Luque-Curtin (2016) solid-solution strengthening estimate. Because Magpie descriptors contain the same atomic properties used to compute these proxies, the high R² scores reflect successful function approximation rather than material property discovery. The DFT validation step (Section 4.1) is specifically designed to replace these proxies with physically grounded data.
 
 |  |  |  |  |
 | --- | --- | --- | --- |
 | **Model** | **Target** | **RMSE** | **R²** |
-| Density | Bulk density (g/cm³) | 0.073 | 0.99 |
-| Strength | Shear strength (GPa) | 0.539 | 0.95 |
+| Density | RoM density proxy (g/cm³) | 0.073 | 0.99 |
+| Strength | SS strengthening proxy (GPa) | 0.539 | 0.95 |
 
 ## Genetic Algorithm Inverse Design
 
