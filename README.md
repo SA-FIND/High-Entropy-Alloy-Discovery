@@ -28,7 +28,7 @@
 > - **Density** is a composition-weighted average of elemental densities.
 > - **Strength** uses a simplified Varvenne-Luque-Curtin (2016) solid-solution strengthening estimate based on the rule-of-mixtures shear modulus plus an atomic size misfit correction.
 >
-> Because Magpie descriptors include statistics of the same atomic properties used to compute these proxies, the ML models achieve near-perfect R² scores by construction. A LinearRegression sanity check is included in the pipeline output to confirm this — if LR achieves comparable R² to the Random Forest, the target is analytically recoverable from the features.
+> Because Magpie descriptors include statistics of the same atomic properties used to compute these proxies, the ML models achieve near-perfect R² scores by construction. A LinearRegression sanity check is included in the pipeline output to confirm this, if LR achieves comparable R² to the Random Forest, the target is analytically recoverable from the features.
 >
 > **Replacing these proxies with grounded data** (Materials Project elastic tensors, experimental measurements, or DFT-computed properties) is the planned next step. See `RESEARCH_PROPOSAL.md` for the validation roadmap.
 
