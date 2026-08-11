@@ -2,7 +2,7 @@
 
 **Principal Investigator:** Solomon Ahedor
 
-**Affiliation:** Department of Materials & Metallurgical Engineering (Year 4)
+**Affiliation:** Department of Materials & Metallurgical Engineering (Year 4), KNUST, Ghana
 
 **Project:** MetaForge (ML-Driven High Entropy Alloy Discovery Platform)
 
