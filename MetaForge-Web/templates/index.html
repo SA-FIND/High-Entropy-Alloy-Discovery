@@ -480,6 +480,28 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
+        .viewer-mode-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: var(--font-sans);
+        }
+        .viewer-mode-btn:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .viewer-mode-btn--active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
         /* ═══════════════════════════════════════════════
            RESULTS
            ═══════════════════════════════════════════════ */
@@ -708,12 +730,16 @@
                 <!-- 3D SQS Crystal Structure Viewer -->
                 <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div class="result-label" style="margin: 0; font-weight: 600; color: var(--text-primary);">Relaxed SQS Supercell</div>
-                        <span id="cifStatusBadge" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-family: var(--font-mono);">3D WebGL</span>
+                        <div class="result-label" style="margin: 0; font-weight: 600; color: var(--text-primary);">SQS Supercell</div>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <button id="modeBtnLive" class="viewer-mode-btn viewer-mode-btn--active" onclick="setViewerMode('live')" title="Dynamically populate atom sites based on current slider percentages">Live Atoms</button>
+                            <button id="modeBtnOptimal" class="viewer-mode-btn" onclick="setViewerMode('optimal')" title="Show ground-truth CHGNet-relaxed optimal SQS blueprint">Optimal SQS</button>
+                            <span id="cifStatusBadge" style="font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); font-family: var(--font-mono); margin-left: 2px;">3D WebGL</span>
+                        </div>
                     </div>
                     <div id="crystalViewer" style="height: 260px; width: 100%; position: relative; border-radius: 8px; background: #07070a; border: 1px solid var(--border-subtle); overflow: hidden;"></div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span style="font-size: 0.72rem; color: var(--text-muted);">Warren-Cowley SRO Annealed</span>
+                        <span id="latticeOccupancyText" style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Sites: Initializing...</span>
                         <button id="toggleSpinBtn" onclick="toggleSpin()" style="background: none; border: none; color: var(--accent-blue); font-size: 0.72rem; cursor: pointer; padding: 0;">Auto-rotate: On</button>
                     </div>
                 </div>
@@ -1007,6 +1033,9 @@
                 });
 
                 updateDonut();
+                if (viewerMode === 'live') {
+                    update3DLattice(resultsComp);
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -1019,6 +1048,10 @@
         // ═══════════════════════════════════════════════
         let viewer3d = null;
         let isSpinning = true;
+        let baseCifHeader = '';
+        let baseCifSites = [];
+        let currentRawCif = '';
+        let viewerMode = 'live'; // 'live' or 'optimal'
 
         function toggleSpin() {
             if (!viewer3d) return;
@@ -1026,6 +1059,126 @@
             viewer3d.spin(isSpinning);
             const btn = document.getElementById('toggleSpinBtn');
             if (btn) btn.textContent = `Auto-rotate: ${isSpinning ? 'On' : 'Off'}`;
+        }
+
+        function setViewerMode(mode) {
+            viewerMode = mode;
+            const btnLive = document.getElementById('modeBtnLive');
+            const btnOpt = document.getElementById('modeBtnOptimal');
+            if (btnLive && btnOpt) {
+                if (mode === 'live') {
+                    btnLive.classList.add('viewer-mode-btn--active');
+                    btnOpt.classList.remove('viewer-mode-btn--active');
+                    update3DLattice(resultsComp);
+                } else {
+                    btnOpt.classList.add('viewer-mode-btn--active');
+                    btnLive.classList.remove('viewer-mode-btn--active');
+                    renderCifInViewer(currentRawCif);
+                    const occEl = document.getElementById('latticeOccupancyText');
+                    if (occEl) occEl.textContent = `Optimal SQS (${baseCifSites.length} sites): CHGNet Annealed`;
+                }
+            }
+        }
+
+        function parseBaseCif(cifText) {
+            currentRawCif = cifText;
+            const lines = cifText.split('\n');
+            let occIdx = -1;
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim().startsWith('_atom_site_occupancy')) {
+                    occIdx = i;
+                    break;
+                }
+            }
+            if (occIdx === -1) {
+                baseCifHeader = '';
+                baseCifSites = [];
+                return;
+            }
+            baseCifHeader = lines.slice(0, occIdx + 1).join('\n') + '\n';
+            baseCifSites = [];
+            for (let i = occIdx + 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const parts = line.split(/\s+/);
+                if (parts.length >= 7) {
+                    baseCifSites.push({
+                        fx: parts[3],
+                        fy: parts[4],
+                        fz: parts[5]
+                    });
+                }
+            }
+        }
+
+        function update3DLattice(comp) {
+            if (!viewer3d || !baseCifSites.length || viewerMode !== 'live') return;
+            if (!comp || Object.keys(comp).length === 0) return;
+
+            const totalSites = baseCifSites.length;
+            let counts = {};
+            let totalAssigned = 0;
+            let remainders = [];
+
+            elements.forEach(el => {
+                const pct = comp[el.sym] || 0;
+                const raw = (pct / 100) * totalSites;
+                const count = Math.floor(raw);
+                counts[el.sym] = count;
+                totalAssigned += count;
+                remainders.push({ sym: el.sym, rem: raw - count });
+            });
+
+            remainders.sort((a, b) => b.rem - a.rem);
+            let remIdx = 0;
+            while (totalAssigned < totalSites && remainders.length > 0) {
+                counts[remainders[remIdx % remainders.length].sym]++;
+                totalAssigned++;
+                remIdx++;
+            }
+
+            // Stride permutation (stride 17 is coprime to both 54 and 48) for uniform quasi-random lattice dispersion
+            const siteSpecies = new Array(totalSites);
+            let permIdx = 0;
+            let occupancyTokens = [];
+            elements.forEach(el => {
+                const c = counts[el.sym] || 0;
+                if (c > 0) occupancyTokens.push(`${c} ${el.sym}`);
+                for (let i = 0; i < c; i++) {
+                    const siteIdx = (permIdx * 17) % totalSites;
+                    siteSpecies[siteIdx] = el.sym;
+                    permIdx++;
+                }
+            });
+
+            const occEl = document.getElementById('latticeOccupancyText');
+            if (occEl) {
+                occEl.textContent = `Sites (${totalSites}): ${occupancyTokens.join(' · ')}`;
+            }
+
+            // Construct updated CIF
+            let cifSitesString = '';
+            for (let k = 0; k < totalSites; k++) {
+                const sym = siteSpecies[k] || elements[0].sym;
+                const s = baseCifSites[k];
+                cifSitesString += `  ${sym}0+  ${sym}${k}  1  ${s.fx}  ${s.fy}  ${s.fz}  1\n`;
+            }
+
+            const dynamicCif = baseCifHeader + cifSitesString;
+            renderCifInViewer(dynamicCif);
+        }
+
+        function renderCifInViewer(cifData) {
+            if (!viewer3d || !cifData) return;
+            viewer3d.clear();
+            viewer3d.addModel(cifData, "cif");
+            viewer3d.setStyle({}, { 
+                sphere: { scale: 0.38, colorscheme: 'Jmol' }, 
+                stick: { radius: 0.10, colorscheme: 'Jmol' } 
+            });
+            viewer3d.zoomTo();
+            viewer3d.render();
+            if (isSpinning) viewer3d.spin(true);
         }
 
         async function load3DStructure(category) {
@@ -1045,22 +1198,20 @@
                     return;
                 }
                 const cifData = await res.text();
-                
-                if (viewer3d) {
-                    viewer3d.clear();
-                } else {
+                parseBaseCif(cifData);
+
+                if (!viewer3d) {
                     viewerDiv.innerHTML = '';
                     viewer3d = $3Dmol.createViewer(viewerDiv, { backgroundColor: '#07070a' });
                 }
 
-                viewer3d.addModel(cifData, "cif");
-                viewer3d.setStyle({}, { 
-                    sphere: { scale: 0.38, colorscheme: 'Jmol' }, 
-                    stick: { radius: 0.10, colorscheme: 'Jmol' } 
-                });
-                viewer3d.zoomTo();
-                viewer3d.render();
-                if (isSpinning) viewer3d.spin(true);
+                if (viewerMode === 'live' && resultsComp && Object.keys(resultsComp).length > 0) {
+                    update3DLattice(resultsComp);
+                } else {
+                    renderCifInViewer(cifData);
+                    const occEl = document.getElementById('latticeOccupancyText');
+                    if (occEl) occEl.textContent = `Optimal SQS (${baseCifSites.length} sites): CHGNet Annealed`;
+                }
             } catch (e) {
                 console.warn("3D structure display note:", e);
                 viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Blueprint loaded</div>`;
