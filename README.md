@@ -1,5 +1,6 @@
 # MetaForge: Machine Learning-Accelerated High Entropy Alloy Discovery
 
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-metaforge--web.onrender.com-00c853?style=for-the-badge&logo=render)](https://metaforge-web.onrender.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![Framework: ICME](https://img.shields.io/badge/ICME-Multi--Fidelity-teal.svg)](#hierarchical-multi-fidelity-discovery-framework)
@@ -9,7 +10,12 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines physics-informed machine learning with genetic algorithms for inverse design and graph neural network structural relaxation via CHGNet.
 
-![MetaForge Web Interface Preview](docs/assets/demo_screenshot.png)
+<div align="center">
+  <a href="https://metaforge-web.onrender.com/" target="_blank" rel="noopener noreferrer">
+    <img src="docs/assets/demo_screenshot.png" alt="MetaForge Interactive 3D Web Interface" width="100%">
+  </a>
+  <p><em>👉 <b><a href="https://metaforge-web.onrender.com/" target="_blank" rel="noopener noreferrer">Click here to launch the interactive live 3D crystal supercell & ML predictor</a></b></em></p>
+</div>
 
 ---
 
