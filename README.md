@@ -7,7 +7,7 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines physics-informed machine learning with genetic algorithms for inverse design and graph neural network structural relaxation via CHGNet.
 
-![MetaForge Web Interface Preview](demo_screenshot.png)
+![MetaForge Web Interface Preview](docs/assets/demo_screenshot.png)
 
 ---
 
@@ -169,7 +169,7 @@ You can run the full machine learning pipeline sequentially by executing the mas
 ```bash
 python run_master.py
 ```
-*Alternatively, you can open and run `HEA.ipynb` for an interactive, cell-by-cell walkthrough of the data harvesting, filtering, and model training process.*
+*Alternatively, you can open and run `notebooks/HEA_Exploration.ipynb` for an interactive, cell-by-cell walkthrough of the data harvesting, filtering, and model training process.*
 
 ### 4. Local Web Server
 
@@ -178,6 +178,30 @@ To launch the local web server and interact with the trained models:
 ```bash
 cd MetaForge-Web
 ..\.venv\Scripts\python.exe app.py
+```
+
+---
+
+## Repository Architecture
+
+```text
+MetaForge/
+├── data/
+│   └── structures/              # SQS blueprints & CHGNet-relaxed CIF crystal supercells
+├── docs/
+│   └── assets/                  # Documentation figures & interface previews
+├── notebooks/
+│   └── HEA_Exploration.ipynb    # Interactive combinatorial & ML prototyping notebook
+├── MetaForge-Web/               # Production Flask + React Web Application
+│   ├── models/                  # Pretrained Random Forest regressor weights (.model)
+│   ├── templates/               # Responsive single-page interface with 3Dmol.js viewer
+│   └── tests/                   # Automated API & security integration test suite
+├── run_master.py                # Standalone master CLI pipeline (training -> GA -> SQS)
+├── requirements.txt             # Primary environment dependencies
+├── render.yaml                  # Cloud deployment configuration
+├── README.md                    # Project documentation
+├── RESEARCH_PROPOSAL.md         # Formal multi-fidelity ICME research proposal
+└── LICENSE                      # MIT Open-Source License
 ```
 
 ---

@@ -685,12 +685,16 @@ for cat, elements_dict in alloy_categories.items():
     print(f"               RoM proxy density:    {best_d:.2f} g/cm3")
     print(f"               Difference:           {abs(chgnet_density - best_d):.2f} g/cm3 ({delta_pct:.1f}%)")
     
-    # Saving CIF outputs
-    file_name_blueprint = f"Optimal_{cat}_Blueprint.cif"
+    # Saving CIF outputs to data/structures
+    cif_dir = os.path.join("data", "structures")
+    if not os.path.exists(cif_dir):
+        cif_dir = "."
+        
+    file_name_blueprint = os.path.join(cif_dir, f"Optimal_{cat}_Blueprint.cif")
     CifWriter(dummy_struct).write_file(file_name_blueprint)
     print(f"  [CIF] Saved unrelaxed blueprint to: {file_name_blueprint}")
     
-    file_name_relaxed = f"Optimal_{cat}_Relaxed.cif"
+    file_name_relaxed = os.path.join(cif_dir, f"Optimal_{cat}_Relaxed.cif")
     CifWriter(relaxed_struct).write_file(file_name_relaxed)
     print(f"  [CIF] Saved relaxed structure to: {file_name_relaxed}")
 

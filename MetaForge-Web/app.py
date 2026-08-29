@@ -49,9 +49,18 @@ categories_map = {
 }
 
 for web_cat, file_cat in categories_map.items():
-    density_path = os.path.join(BASE_DIR, f'ml_density_{file_cat}.model')
-    strength_path = os.path.join(BASE_DIR, f'ml_strength_{file_cat}.model')
-    energy_path = os.path.join(BASE_DIR, f'ml_energy_{file_cat}.model')
+    # Look in models/ subdirectory first, fallback to BASE_DIR
+    density_path = os.path.join(BASE_DIR, 'models', f'ml_density_{file_cat}.model')
+    if not os.path.exists(density_path):
+        density_path = os.path.join(BASE_DIR, f'ml_density_{file_cat}.model')
+        
+    strength_path = os.path.join(BASE_DIR, 'models', f'ml_strength_{file_cat}.model')
+    if not os.path.exists(strength_path):
+        strength_path = os.path.join(BASE_DIR, f'ml_strength_{file_cat}.model')
+        
+    energy_path = os.path.join(BASE_DIR, 'models', f'ml_energy_{file_cat}.model')
+    if not os.path.exists(energy_path):
+        energy_path = os.path.join(BASE_DIR, f'ml_energy_{file_cat}.model')
     
     try:
         if os.path.exists(density_path) and os.path.exists(strength_path):
@@ -109,10 +118,13 @@ def get_structure(category):
         "Aerospace Alloy": "Aerospace"
     }
     file_cat = cat_map.get(category, category)
-    # Search root and local directories for relaxed CIF
+    # Search data/structures, root, and local directories for relaxed CIF
     candidate_paths = [
+        os.path.join(os.path.dirname(BASE_DIR), "data", "structures", f"Optimal_{file_cat}_Relaxed.cif"),
         os.path.join(os.path.dirname(BASE_DIR), f"Optimal_{file_cat}_Relaxed.cif"),
+        os.path.join(BASE_DIR, "data", "structures", f"Optimal_{file_cat}_Relaxed.cif"),
         os.path.join(BASE_DIR, f"Optimal_{file_cat}_Relaxed.cif"),
+        os.path.join(os.path.dirname(BASE_DIR), "data", "structures", f"Optimal_{file_cat}_Blueprint.cif"),
         os.path.join(os.path.dirname(BASE_DIR), f"Optimal_{file_cat}_Blueprint.cif"),
     ]
     for p in candidate_paths:
