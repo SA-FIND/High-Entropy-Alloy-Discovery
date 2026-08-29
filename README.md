@@ -54,14 +54,6 @@ graph TD
 
 > **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline verifies that Tier 1 proxies are smoothly recoverable from Magpie features, while Tier 2 CHGNet relaxations reveal the true non-linear atomic volume contractions (+5.1% in refractory systems) that linear proxies omit.
 
-### Comparative Positioning: Relation to State-of-the-Art Calculators
-In contemporary materials informatics, forward descriptor calculators such as **HEA-Bench** (*Fieser, Dewanjee, & Hu, Materials 2026, [DOI: 10.3390/ma19143075](https://doi.org/10.3390/ma19143075)*) provide rigorous closed-form baseline calculations for classical thermodynamic parameters ($\delta, \text{VEC}, \Delta H_{mix}, \Omega$).
-
-**MetaForge incorporates these established empirical boundaries as its Tier 1 feasibility filters**, but expands beyond forward screening into an **end-to-end inverse design platform**:
-* **From Forward Calculation to Inverse Discovery:** Rather than requiring manual trial compositions, MetaForge deploys a Genetic Algorithm across the multi-element simplex to actively solve the inverse problem—discovering non-intuitive, high-specific-strength Pareto candidates.
-* **From Empirical Proxies to Universal GNN Potentials:** While classical calculators stop at analytical closed-form equations, MetaForge takes Pareto candidates directly into **Tier 2 atomistic relaxation via CHGNet** (a universal Crystal Graph Neural Network potential) to capture real local lattice distortion, short-range order (SRO), and volume contractions (+5.1% in refractory systems).
-* **Interactive 3D Crystallography:** Couples real-time ML surrogate inference with a live WebGL supercell viewer, allowing researchers to inspect 54-atom BCC and 48-atom FCC lattices dynamically.
-
 ---
 
 ## Model Performance & Discovered Candidates
