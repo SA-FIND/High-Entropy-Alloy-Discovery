@@ -140,9 +140,9 @@
            LAYOUT
            ═══════════════════════════════════════════════ */
         .app-container {
-            max-width: 1000px;
+            max-width: 1240px;
             margin: 0 auto;
-            padding: 48px 24px 24px;
+            padding: 16px 20px 8px;
         }
 
         /* ═══════════════════════════════════════════════
@@ -150,24 +150,24 @@
            ═══════════════════════════════════════════════ */
         .header {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 12px;
             position: relative;
         }
 
         .header__title {
-            font-size: 2.5rem;
+            font-size: 1.65rem;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 4px;
             color: var(--text-primary);
             letter-spacing: -0.02em;
         }
 
         .header__subtitle {
-            font-size: 1rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
-            line-height: 1.6;
+            line-height: 1.4;
         }
 
         /* ═══════════════════════════════════════════════
@@ -205,7 +205,7 @@
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            gap: 16px;
         }
 
         /* ═══════════════════════════════════════════════
@@ -214,8 +214,8 @@
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 32px;
+            border-radius: 14px;
+            padding: 16px 20px;
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -228,20 +228,20 @@
         }
 
         .card__title {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 12px;
+            padding-bottom: 8px;
         }
 
         .card-header-flex {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 12px;
+            padding-bottom: 8px;
         }
 
         .card-header-flex .card__title {
@@ -295,8 +295,8 @@
            ═══════════════════════════════════════════════ */
         .category-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 32px;
+            gap: 8px;
+            margin-bottom: 14px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -305,11 +305,11 @@
             background-color: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             color: var(--text-secondary);
-            padding: 10px 18px;
-            border-radius: 10px;
+            padding: 6px 14px;
+            border-radius: 8px;
             cursor: pointer;
             font-family: var(--font-sans);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -332,26 +332,27 @@
            SLIDERS
            ═══════════════════════════════════════════════ */
         .slider-group {
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
 
         .slider-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 3px;
         }
 
         .el-label {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-weight: 600;
+            font-size: 0.82rem;
         }
 
         .el-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             transition: transform 0.2s ease;
         }
@@ -363,17 +364,18 @@
         .input-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .input-group input[type="number"] {
-            width: 60px;
-            padding: 4px;
+            width: 48px;
+            padding: 2px 4px;
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             color: var(--text-primary);
             font-family: var(--font-mono);
-            border-radius: 6px;
+            font-size: 0.78rem;
+            border-radius: 4px;
             text-align: center;
             transition: border-color 0.2s ease;
         }
@@ -386,9 +388,9 @@
 
         .normalized-val {
             font-family: var(--font-mono);
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             color: var(--text-secondary);
-            min-width: 45px;
+            min-width: 40px;
             text-align: right;
             font-variant-numeric: tabular-nums;
         }
@@ -432,15 +434,17 @@
            DONUT CHART
            ═══════════════════════════════════════════════ */
         .donut-section {
-            margin-top: 32px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 16px;
         }
 
         .donut-svg {
-            width: 110px;
-            height: 110px;
+            width: 82px;
+            height: 82px;
             transform: rotate(-90deg);
             flex-shrink: 0;
         }
@@ -452,8 +456,8 @@
         .donut-legend {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            font-size: 0.85rem;
+            gap: 3px;
+            font-size: 0.74rem;
             color: var(--text-secondary);
         }
 
@@ -506,49 +510,52 @@
            RESULTS
            ═══════════════════════════════════════════════ */
         .results-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .result-tile {
             background-color: var(--bg-surface);
             border: 1px solid var(--border-subtle);
-            padding: 24px;
-            border-radius: 12px;
+            padding: 8px 12px;
+            border-radius: 10px;
             text-align: center;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0,0,0,0.1);
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
         }
 
         .result-tile:hover {
-            transform: translateY(-2px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 6px 20px rgba(0,0,0,0.15);
             border-color: rgba(255, 255, 255, 0.15);
         }
 
         .result-label {
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.06em;
             color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .result-value {
             font-family: var(--font-mono);
-            font-size: 2rem;
+            font-size: 1.3rem;
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             transition: color 0.3s ease;
         }
 
         .result-unit {
-            font-size: 0.9rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
-            margin-left: 4px;
+            margin-left: 3px;
         }
 
         /* Value colors */
@@ -582,12 +589,12 @@
            ═══════════════════════════════════════════════ */
         .app-footer {
             text-align: center;
-            padding: 32px 24px 24px;
-            margin-top: 48px;
+            padding: 12px 16px 8px;
+            margin-top: 14px;
             border-top: 1px solid var(--border-subtle);
             color: var(--text-muted);
-            font-size: 0.8rem;
-            line-height: 1.6;
+            font-size: 0.72rem;
+            line-height: 1.4;
         }
 
         .app-footer a {
@@ -728,8 +735,8 @@
                 </div>
 
                 <!-- 3D SQS Crystal Structure Viewer -->
-                <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <div class="result-label" style="margin: 0; font-weight: 600; color: var(--text-primary);">SQS Supercell</div>
                         <div style="display: flex; gap: 4px; align-items: center;">
                             <button id="modeBtnLive" class="viewer-mode-btn viewer-mode-btn--active" onclick="setViewerMode('live')" title="Dynamically populate atom sites based on current slider percentages">Live Atoms</button>
@@ -737,10 +744,10 @@
                             <span id="cifStatusBadge" style="font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); font-family: var(--font-mono); margin-left: 2px;">3D WebGL</span>
                         </div>
                     </div>
-                    <div id="crystalViewer" style="height: 260px; width: 100%; position: relative; border-radius: 8px; background: #07070a; border: 1px solid var(--border-subtle); overflow: hidden;"></div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span id="latticeOccupancyText" style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Sites: Initializing...</span>
-                        <button id="toggleSpinBtn" onclick="toggleSpin()" style="background: none; border: none; color: var(--accent-blue); font-size: 0.72rem; cursor: pointer; padding: 0;">Auto-rotate: On</button>
+                    <div id="crystalViewer" style="height: 220px; width: 100%; position: relative; border-radius: 8px; background: #07070a; border: 1px solid var(--border-subtle); overflow: hidden;"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                        <span id="latticeOccupancyText" style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">Sites: Initializing...</span>
+                        <button id="toggleSpinBtn" onclick="toggleSpin()" style="background: none; border: none; color: var(--accent-blue); font-size: 0.7rem; cursor: pointer; padding: 0;">Auto-rotate: On</button>
                     </div>
                 </div>
             </div>
