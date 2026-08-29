@@ -1,48 +1,50 @@
-# Environments
-pymatgenenv/
-env/
-venv/
-.venv/
-zenodo_test/
-.env
-
-# Python
+# Byte-compiled / optimized / C extensions
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.pytest_cache/
 
-# Jupyter
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Unit-test / coverage reports
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+pymatgenenv/
+*.env/
+
+# Environment variables
+.env
+.env.*
+
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# IDE / OS
+# IDE and OS files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
+ehthumbs.db
 
-
-
-# Debugging scripts
-rendered.html
-temp.jsx
-debug_pw.py
-take_screenshot.py
-debug_dom.js
-*.png
-
-# Node
+# Frontend & Node dependencies
 node_modules/
-AGENT_CONTEXT.md
-temp_output.html
-fix_js.py
-*.cif
-Relaxed_Optimal_AlTiScZrV_Blueprint.cif
 
-# Personal Study Materials & Generated PDFs
-*.pdf
-COMPREHENSIVE_HEA_COURSE.md
-PAPER_METAFORGE_DISCOVERY.md
-generate_pdfs.py
-*_RENDER.html
+# Local development outputs & caches
+*.log
+*.tmp
+*.bak
+local/
+scratch/
+temp/
