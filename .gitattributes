@@ -1,0 +1,6 @@
+# GitHub Linguist overrides
+# Ensures MetaForge is accurately categorized as a Python / Materials Science project
+*.html linguist-detectable=false
+*.bat linguist-detectable=false
+MetaForge-Web/templates/* linguist-detectable=false
+MetaForge-Web/static/* linguist-detectable=false

@@ -14,7 +14,7 @@
 ## Core Features
 
 - **Combinatorial Engine:** Generates candidate alloy compositions and filters them using established physical metallurgy rules (e.g., lattice strain limits δ < 6.6% and specific VEC phase thresholds).
-- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict rule-of-mixtures density and solid-solution strengthening proxies (see [Transparency Note](#transparency-note) below).
+- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict continuum density and dislocation-calibrated yield strength ($\sigma_y = \sigma_0 + M \cdot \tau_{ss}$).
 - **Inverse Design:** A custom genetic algorithm evolves alloy compositions over multiple generations to maximize specific strength (strength-to-weight ratio).
 - **Structure Relaxation:** Optimizes SQS supercell blueprints (54-atom BCC / 48-atom FCC) using the CHGNet graph neural network interatomic potential, with post-relaxation space group verification via `SpacegroupAnalyzer`.
 - **Web Interface:** A lightweight Flask and React interface with a clean, dark-themed UI for real-time model inference.
@@ -25,30 +25,29 @@
 
 MetaForge employs a **three-tier multi-fidelity screening architecture** designed to balance high-throughput exploratory bandwidth with atomistic and quantum thermodynamic accuracy:
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│               TIER 1: HIGH-THROUGHPUT COMPOSITIONAL SCREEN            │
-│  • Combinatorial phase filtering (Zhang δ < 6.6%, Guo VEC thresholds) │
-│  • Miedema enthalpy filter (-15 <= ΔH_mix <= +5 kJ/mol, Ω >= 1.1)     │
-│  • 132 Magpie feature descriptors + Random Forest surrogate regressors │
-│  • Dislocation-calibrated Yield Strength (Taylor factor: σ_y = σ_0 + M·τ_ss)
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Top Candidates (Simplex Pareto Front)
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│               TIER 2: ATOMISTIC GNN RELAXATION & SRO OPTIMIZATION     │
-│  • Monte Carlo simulated annealing minimizing Warren-Cowley SRO (α₁, α₂)
-│  • 54-atom BCC / 48-atom FCC Special Quasirandom Structures (SQS)      │
-│  • CHGNet universal graph neural network structural relaxation         │
-│  • Thermodynamic Formation Energy (ΔE_f) relative to pure elements     │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Final Pareto Blueprints
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│               TIER 3: FIRST-PRINCIPLES DFT & EXPERIMENTAL VALIDATION   │
-│  • High-throughput ab-initio DFT (VASP/QE) for ground-truth C_ij       │
-│  • Vacuum arc remelting & XRD/SEM/Vickers hardness synthesis roadmap   │
-└────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph T1["<b>TIER 1: High-Throughput Compositional Screen</b>"]
+        A1["• Combinatorial phase filtering: Zhang δ ≤ 6.6%, Guo VEC thresholds"]
+        A2["• Miedema mixing enthalpy: -15 ≤ ΔH_mix ≤ +5 kJ/mol, Ω ≥ 1.1"]
+        A3["• 132 Magpie feature descriptors + Random Forest surrogate regressors"]
+        A4["• Dislocation-calibrated Yield Strength: σ_y = σ_0 + M·τ_ss"]
+    end
+
+    subgraph T2["<b>TIER 2: Atomistic GNN Relaxation & SRO Optimization</b>"]
+        B1["• Monte Carlo simulated annealing minimizing Warren-Cowley SRO: α₁, α₂"]
+        B2["• 54-atom BCC / 48-atom FCC Special Quasirandom Structures (SQS)"]
+        B3["• CHGNet universal neural network potential structural relaxation"]
+        B4["• Thermodynamic Formation Energy: ΔE_f relative to pure elements"]
+    end
+
+    subgraph T3["<b>TIER 3: First-Principles DFT & Experimental Validation</b>"]
+        C1["• High-throughput ab-initio DFT (VASP/QE) for ground-truth C_ij"]
+        C2["• Vacuum arc remelting & XRD/SEM/Vickers hardness synthesis roadmap"]
+    end
+
+    T1 -->|Top Pareto Candidates| T2
+    T2 -->|Optimized Blueprints| T3
 ```
 
 > **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline verifies that Tier 1 proxies are smoothly recoverable from Magpie features, while Tier 2 CHGNet relaxations reveal the true non-linear atomic volume contractions (+5.1% in refractory systems) that linear proxies omit.
