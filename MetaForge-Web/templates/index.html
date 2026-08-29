@@ -38,7 +38,10 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3dmol/2.0.4/3Dmol-min.js"></script>
+    <!-- 3Dmol.js: Local high-speed delivery with official CDN fallbacks -->
+    <script src="/static/js/3Dmol-min.js"></script>
+    <script>window.$3Dmol || document.write('<script src="https://3Dmol.org/build/3Dmol-min.js"><\/script>')</script>
+    <script>window.$3Dmol || document.write('<script src="https://cdn.jsdelivr.net/npm/3dmol@2.4.2/build/3Dmol-min.js"><\/script>')</script>
 
     <style>
         /* ═══════════════════════════════════════════════
@@ -1030,8 +1033,8 @@
             if (!viewerDiv) return;
 
             if (typeof $3Dmol === 'undefined') {
-                viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Loading 3D WebGL viewer...</div>`;
-                setTimeout(() => load3DStructure(category), 500);
+                viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Initializing 3D WebGL engine...</div>`;
+                setTimeout(() => load3DStructure(category), 250);
                 return;
             }
 
@@ -1042,8 +1045,14 @@
                     return;
                 }
                 const cifData = await res.text();
-                viewerDiv.innerHTML = '';
-                viewer3d = $3Dmol.createViewer("crystalViewer", { backgroundColor: '#07070a' });
+                
+                if (viewer3d) {
+                    viewer3d.clear();
+                } else {
+                    viewerDiv.innerHTML = '';
+                    viewer3d = $3Dmol.createViewer(viewerDiv, { backgroundColor: '#07070a' });
+                }
+
                 viewer3d.addModel(cifData, "cif");
                 viewer3d.setStyle({}, { 
                     sphere: { scale: 0.38, colorscheme: 'Jmol' }, 
@@ -1051,7 +1060,7 @@
                 });
                 viewer3d.zoomTo();
                 viewer3d.render();
-                viewer3d.spin(isSpinning);
+                if (isSpinning) viewer3d.spin(true);
             } catch (e) {
                 console.warn("3D structure display note:", e);
                 viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Blueprint loaded</div>`;
