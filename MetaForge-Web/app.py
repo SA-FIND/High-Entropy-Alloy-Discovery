@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, request, jsonify, render_template, make_response
+from flask import Flask, request, jsonify, render_template, make_response, send_from_directory
 from flask_cors import CORS
 import joblib
 from pymatgen.core import Composition
@@ -85,6 +85,11 @@ def home():
     # Allow standard caching but require revalidation
     response.headers['Cache-Control'] = 'no-cache, must-revalidate'
     return response
+
+@app.route('/favicon.ico')
+def favicon():
+    """Serves the favicon.ico icon."""
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/robots.txt')
 def robots():
