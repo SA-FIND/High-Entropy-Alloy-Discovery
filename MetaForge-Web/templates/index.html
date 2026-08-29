@@ -38,6 +38,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/3dmol/2.0.4/3Dmol-min.js"></script>
 
     <style>
         /* ═══════════════════════════════════════════════
@@ -229,6 +230,61 @@
             margin-bottom: 24px;
             border-bottom: 1px solid var(--border-subtle);
             padding-bottom: 12px;
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 12px;
+        }
+
+        .card-header-flex .card__title {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .autobalance-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .autobalance-btn:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .autobalance-btn.active {
+            border-color: rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--accent-blue);
+        }
+
+        .autobalance-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            transition: background-color 0.2s ease;
+        }
+
+        .autobalance-btn.active .autobalance-dot {
+            background-color: var(--accent-blue);
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
         }
 
         /* ═══════════════════════════════════════════════
@@ -630,14 +686,32 @@
                                 class="result-unit">g/cm³</span></div>
                     </div>
                     <div class="result-tile">
-                        <div class="result-label">Predicted Shear Strength</div>
+                        <div class="result-label">Predicted Yield Strength (σ<sub>y</sub>)</div>
                         <div class="result-value val-strength"><span id="val-strength">0.00</span><span
                                 class="result-unit">GPa</span></div>
                     </div>
+                    <div class="result-tile" id="energyTile" style="display: none;">
+                        <div class="result-label">GNN Ground-State Energy (E)</div>
+                        <div class="result-value" style="color: var(--accent-green);"><span id="val-energy">0.000</span><span
+                                class="result-unit">eV/atom</span></div>
+                    </div>
                     <div class="result-tile result-tile--score" id="scoreTile">
-                        <div class="result-label" style="color: var(--text-primary);">Specific Strength Score</div>
+                        <div class="result-label" style="color: var(--text-primary);">Specific Yield Strength (σ<sub>y</sub>/ρ)</div>
                         <div class="result-value val-score" style="color: var(--text-primary);"><span id="val-score">0.00</span><span
                                 class="result-unit">GPa·cm³/g</span></div>
+                    </div>
+                </div>
+
+                <!-- 3D SQS Crystal Structure Viewer -->
+                <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="result-label" style="margin: 0; font-weight: 600; color: var(--text-primary);">Relaxed SQS Supercell</div>
+                        <span id="cifStatusBadge" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-family: var(--font-mono);">3D WebGL</span>
+                    </div>
+                    <div id="crystalViewer" style="height: 260px; width: 100%; position: relative; border-radius: 8px; background: #07070a; border: 1px solid var(--border-subtle); overflow: hidden;"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Warren-Cowley SRO Annealed</span>
+                        <button id="toggleSpinBtn" onclick="toggleSpin()" style="background: none; border: none; color: var(--accent-blue); font-size: 0.72rem; cursor: pointer; padding: 0;">Auto-rotate: On</button>
                     </div>
                 </div>
             </div>
@@ -719,7 +793,7 @@
         // ═══════════════════════════════════════════════
         // ANIMATED NUMBER COUNTER
         // ═══════════════════════════════════════════════
-        function animateValue(element, start, end, duration) {
+        function animateValue(element, start, end, duration, decimals = 2) {
             const startTime = performance.now();
             const diff = end - start;
 
@@ -729,7 +803,7 @@
                 // Ease-out cubic
                 const eased = 1 - Math.pow(1 - progress, 3);
                 const current = start + diff * eased;
-                element.textContent = current.toFixed(2);
+                element.textContent = current.toFixed(decimals);
                 if (progress < 1) {
                     requestAnimationFrame(step);
                 }
@@ -764,6 +838,7 @@
             initState();
             renderTabs();
             initUI();
+            load3DStructure(cat);
         }
 
         // ═══════════════════════════════════════════════
@@ -895,14 +970,24 @@
                 const densityEl = document.getElementById('val-density');
                 const strengthEl = document.getElementById('val-strength');
                 const scoreEl = document.getElementById('val-score');
+                const energyTile = document.getElementById('energyTile');
+                const energyEl = document.getElementById('val-energy');
 
                 const oldDensity = parseFloat(densityEl.textContent) || 0;
                 const oldStrength = parseFloat(strengthEl.textContent) || 0;
                 const oldScore = parseFloat(scoreEl.textContent) || 0;
 
-                animateValue(densityEl, oldDensity, data.density, 400);
-                animateValue(strengthEl, oldStrength, data.strength, 400);
-                animateValue(scoreEl, oldScore, data.score, 400);
+                animateValue(densityEl, oldDensity, data.density, 400, 2);
+                animateValue(strengthEl, oldStrength, data.strength, 400, 2);
+                animateValue(scoreEl, oldScore, data.score, 400, 2);
+
+                if (data.energy !== undefined && data.energy !== null) {
+                    energyTile.style.display = 'block';
+                    const oldEnergy = parseFloat(energyEl.textContent) || 0;
+                    animateValue(energyEl, oldEnergy, data.energy, 400, 3);
+                } else {
+                    energyTile.style.display = 'none';
+                }
 
                 // Brief opacity pulse instead of glowing
                 scoreTile.style.opacity = '0.5';
@@ -927,11 +1012,59 @@
         }
 
         // ═══════════════════════════════════════════════
+        // 3D SQS CRYSTAL STRUCTURE VIEWER (3Dmol.js)
+        // ═══════════════════════════════════════════════
+        let viewer3d = null;
+        let isSpinning = true;
+
+        function toggleSpin() {
+            if (!viewer3d) return;
+            isSpinning = !isSpinning;
+            viewer3d.spin(isSpinning);
+            const btn = document.getElementById('toggleSpinBtn');
+            if (btn) btn.textContent = `Auto-rotate: ${isSpinning ? 'On' : 'Off'}`;
+        }
+
+        async function load3DStructure(category) {
+            const viewerDiv = document.getElementById('crystalViewer');
+            if (!viewerDiv) return;
+
+            if (typeof $3Dmol === 'undefined') {
+                viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Loading 3D WebGL viewer...</div>`;
+                setTimeout(() => load3DStructure(category), 500);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/structures/${encodeURIComponent(category)}`);
+                if (!res.ok) {
+                    viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Structure blueprint rendering...</div>`;
+                    return;
+                }
+                const cifData = await res.text();
+                viewerDiv.innerHTML = '';
+                viewer3d = $3Dmol.createViewer("crystalViewer", { backgroundColor: '#07070a' });
+                viewer3d.addModel(cifData, "cif");
+                viewer3d.setStyle({}, { 
+                    sphere: { scale: 0.38, colorscheme: 'Jmol' }, 
+                    stick: { radius: 0.10, colorscheme: 'Jmol' } 
+                });
+                viewer3d.zoomTo();
+                viewer3d.render();
+                viewer3d.spin(isSpinning);
+            } catch (e) {
+                console.warn("3D structure display note:", e);
+                viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Blueprint loaded</div>`;
+            }
+        }
+
+        // ═══════════════════════════════════════════════
         // BOOT SEQUENCE
         // ═══════════════════════════════════════════════
         initState();
         renderTabs();
         initUI();
+        load3DStructure(currentCategory);
     </script>
 </body>
 

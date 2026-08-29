@@ -27,8 +27,10 @@ def set_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://unpkg.com; connect-src 'self' *"
+    response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; connect-src 'self' *"
     return response
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Loading category-specific regression models and Matminer Magpie features
 logger.info("Loading MetaForge ML Models...")
@@ -47,10 +49,19 @@ categories_map = {
 }
 
 for web_cat, file_cat in categories_map.items():
+    density_path = os.path.join(BASE_DIR, f'ml_density_{file_cat}.model')
+    strength_path = os.path.join(BASE_DIR, f'ml_strength_{file_cat}.model')
+    energy_path = os.path.join(BASE_DIR, f'ml_energy_{file_cat}.model')
+    
     try:
-        models[web_cat]['density'] = joblib.load(f'ml_density_{file_cat}.model')
-        models[web_cat]['strength'] = joblib.load(f'ml_strength_{file_cat}.model')
-        logger.info(f"Loaded models for {web_cat}.")
+        if os.path.exists(density_path) and os.path.exists(strength_path):
+            models[web_cat]['density'] = joblib.load(density_path)
+            models[web_cat]['strength'] = joblib.load(strength_path)
+            logger.info(f"Loaded density and strength models for {web_cat}.")
+        
+        if os.path.exists(energy_path):
+            models[web_cat]['energy'] = joblib.load(energy_path)
+            logger.info(f"Loaded energy model for {web_cat}.")
     except Exception as e:
         logger.warning(f"Could not load models for {web_cat}: {e}")
 
@@ -88,6 +99,33 @@ def sitemap():
     response.headers['Content-Type'] = 'application/xml'
     return response
 
+@app.route('/structures/<category>')
+def get_structure(category):
+    """Serves the relaxed CIF crystal structure for the requested alloy category."""
+    cat_map = {
+        "Refractory Alloy": "Refractory",
+        "Corrosion Resistance": "Corrosion",
+        "Lightweight Alloy": "Lightweight",
+        "Aerospace Alloy": "Aerospace"
+    }
+    file_cat = cat_map.get(category, category)
+    # Search root and local directories for relaxed CIF
+    candidate_paths = [
+        os.path.join(os.path.dirname(BASE_DIR), f"Optimal_{file_cat}_Relaxed.cif"),
+        os.path.join(BASE_DIR, f"Optimal_{file_cat}_Relaxed.cif"),
+        os.path.join(os.path.dirname(BASE_DIR), f"Optimal_{file_cat}_Blueprint.cif"),
+    ]
+    for p in candidate_paths:
+        if os.path.exists(p):
+            with open(p, 'r', encoding='utf-8') as f:
+                content = f.read()
+            resp = make_response(content)
+            resp.headers['Content-Type'] = 'text/plain; charset=utf-8'
+            resp.headers['Access-Control-Allow-Origin'] = '*'
+            return resp
+            
+    return jsonify({'error': f'Structure for {category} not found.'}), 404
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -106,6 +144,7 @@ def predict():
 
         ml_density = models[category]['density']
         ml_strength = models[category]['strength']
+        ml_energy = models[category].get('energy')
 
         elements = list(elements_data.keys())
         raw_values = []
@@ -122,7 +161,15 @@ def predict():
         
         # Preventing division by zero for null compositions
         if total == 0:
-            return jsonify({'density': 0, 'strength': 0, 'score': 0, 'composition': {el: 0 for el in elements}})
+            res = {
+                'density': 0,
+                'strength': 0,
+                'score': 0,
+                'composition': {el: 0 for el in elements}
+            }
+            if ml_energy is not None:
+                res['energy'] = 0
+            return jsonify(res)
         
         # Normalizing atomic weights into molar fractions
         fractions = [v / total for v in raw_values]
@@ -137,12 +184,18 @@ def predict():
         strength = ml_strength.predict([features])[0]
         score = strength / density if density > 0 else 0
         
-        return jsonify({
+        res = {
             'density': round(float(density), 2),
             'strength': round(float(strength), 2),
             'score': round(float(score), 2),
             'composition': {el: round(frac * 100, 1) for el, frac in comp_dict.items()}
-        })
+        }
+        
+        if ml_energy is not None:
+            energy = ml_energy.predict([features])[0]
+            res['energy'] = round(float(energy), 3)
+            
+        return jsonify(res)
     except Exception as e:
         logger.error(f"Prediction Error: {str(e)}\n{traceback.format_exc()}")
         return jsonify({'error': 'An internal error occurred during prediction.'}), 500

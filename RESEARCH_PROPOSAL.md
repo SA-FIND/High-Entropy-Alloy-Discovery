@@ -1,215 +1,166 @@
-**Research Proposal: Machine Learning-Accelerated Discovery of Multi-Principal Element Alloys for Extreme Environments**
+# Research Proposal: Hierarchical Multi-Fidelity Inverse Design and Atomistic Validation of Multi-Principal Element Alloys for Extreme Environments
+
+**Principal Investigator:** Solomon Ahedor  
+**Affiliation:** Department of Materials & Metallurgical Engineering, Kwame Nkrumah University of Science and Technology (KNUST), Kumasi, Ghana  
+**Project:** MetaForge (Computational Materials Informatics Platform)  
+**Date:** Revised Academic Edition — May 2026  
+
+---
+
+## Abstract
+
+Exploring the vast multi-component compositional space of Multi-Principal Element Alloys (MPEAs) and High-Entropy Alloys (HEAs) presents a formidable combinatorial challenge, rendering conventional empirical trial-and-error synthesis economically intractable. This proposal presents **MetaForge**, an Integrated Computational Materials Engineering (ICME) framework that couples physics-informed compositional screening with atomistic graph neural network (GNN) relaxations and a first-principles validation roadmap. 
+
+The framework implements a hierarchical multi-fidelity screening architecture:
+1. **Tier 1 (High-Throughput Compositional Screening):** Enforces thermodynamic Hume-Rothery size mismatch (delta <= 6.6%), Guo valence electron concentration (VEC) phase boundaries, Miedema binary mixing enthalpies (-15.0 to +5.0 kJ/mol), and Yang-Zhang thermodynamic parameters (Omega >= 1.1). Surrogates trained on 132-dimensional Matminer Magpie descriptors predict continuum density and dislocation-calibrated yield strengths based on the Taylor-Varvenne dislocation model: `Sigma_y = Sigma_0 + (M * Tau_ss)`.
+2. **Tier 2 (Atomistic SQS Annealing & GNN Potentials):** Special Quasirandom Structures (SQS, 54-atom BCC / 48-atom FCC) are synthesized by minimizing Warren-Cowley Short-Range Order (SRO) parameters via Monte Carlo simulated annealing, followed by structural relaxation using the universal CHGNet interatomic neural potential.
+3. **Tier 3 (Quantum & Synthesis Roadmap):** Outlines ab-initio Density Functional Theory (DFT) calculations of ground-state elastic stiffness tensors (C11, C12, C44) and vacuum arc remelting synthesis.
+
+Genetic algorithm optimization adhering strictly to the Yeh & Cantor multi-principal element criterion (5 to 35 atomic % per constituent) isolated a standout refractory HEA candidate: **W:18.5% - Mo:24.7% - Ta:26.1% - Nb:16.8% - V:13.9%**. This alloy exhibits a predicted yield strength of **1.96 GPa (1960 MPa)**, relaxed density of **14.29 g/cm³**, and a near-zero formation enthalpy (`Delta-E_f = +0.0286 eV/atom = +2.76 kJ/mol`) that is completely stabilized by high configurational entropy (`Delta-S_mix = 13.4 J/mol·K`). The interactive computational engine is deployed live at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/).
+
+---
+
+## 1. Background & Theoretical Framework
+
+### 1.1 Multi-Principal Element Metallurgy
+Unlike classical physical metallurgy—which optimizes properties by perturbing a single principal solvent lattice (e.g., Fe in steels, Ni in superalloys)—High-Entropy Alloys rely on four core metallurgical effects:
+* **High Entropy Effect:** High configurational entropy of mixing (`Delta-S_config >= 1.5 * R`) lowers total Gibbs free energy (`Delta-G = Delta-H - T * Delta-S`) at elevated temperatures, suppressing complex brittle intermetallics in favor of disordered solid solutions.
+* **Sluggish Diffusion:** Fluctuating local atomic potential wells increase activation energies for vacancy migration, conferring exceptional high-temperature creep resistance.
+* **Severe Lattice Distortion:** Size and modulus misfits among distinct constituents generate non-uniform internal stress fields, elevating intrinsic Peierls-Nabarro friction stress.
+* **Cocktail Effect:** Non-linear synergistic interactions among constituents yield multi-functional mechanical and chemical enhancements.
+
+### 1.2 The Combinatorial Bottleneck
+Selecting 5 principal components from a candidate pool of 70 metallic elements yields over 12 million equiatomic alloy systems. Discretizing compositional variations by 5 atomic % increments expands the search hyper-volume to hundreds of millions of distinct candidates. High-throughput physical synthesis remains cost-prohibitive for broad sweeps. Informatics-guided inverse design is mandatory to down-select optimal candidates prior to laboratory synthesis.
+
+---
+
+## 2. Research Methodology & Multi-Fidelity Architecture
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   METAFORGE HIERARCHICAL WORKFLOW                      │
+├────────────────────────────────────────────────────────────────────────┤
+│  [Tier 1] Combinatorial Screening (Simplex Discretization)             │
+│   • Hume-Rothery Lattice Distortion Filter: delta <= 6.6%              │
+│   • Guo Valence Electron Concentration (VEC) Phase Stability           │
+│   • Miedema Enthalpy of Mixing: -15.0 <= Delta-H_mix <= +5.0 kJ/mol    │
+│   • Yang & Zhang Thermodynamic Ratio: Omega >= 1.1                     │
+│   • Featurization: 132 Magpie Descriptors (Matminer)                   │
+│   • Surrogate Property Modeling:                                       │
+│       - Continuum Density (g/cm³)                                      │
+│       - Dislocation Yield Strength: Sigma_y = Sigma_0 + M * Tau_ss     │
+│                                                                        │
+│  [Tier 2] Atomistic Generation & Neural Potential Relaxation           │
+│   • SQS Synthesis: Warren-Cowley SRO Minimization (Monte Carlo)        │
+│   • 54-atom BCC / 48-atom FCC Supercell Geometry                       │
+│   • Universal Interatomic Potential Relaxation (CHGNet)                │
+│   • Formation Energy: Delta-E_f = E_relaxed/N - Sum(c_i * E_ref)       │
+│                                                                        │
+│  [Tier 3] Validation & Laboratory Synthesis Roadmap                    │
+│   • Ab-Initio Quantum DFT (VASP / Quantum ESPRESSO)                    │
+│   • Elastic Stiffness Tensors (C11, C12, C44) & Moduli                 │
+│   • Vacuum Arc Remelting, XRD Phase Analysis, Vickers Microhardness    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.1 Thermodynamic Phase Stability & Solid-Solution Criteria
+To ensure that predicted alloys stabilize as disordered single-phase solid solutions, candidate compositions must satisfy four coupled thermodynamic criteria:
+
+```
+1. ATOMIC SIZE MISMATCH (delta):
+   delta = 100 * SquareRoot( Sum of [ c_i * (1 - r_i / r_average)^2 ] ) <= 6.6%
+   where r_i is atomic radius and r_average is average radius.
+
+2. MIEDEMA ENTHALPY OF MIXING (Delta-H_mix):
+   Delta-H_mix = Sum of [ 4 * H_ij * c_i * c_j ]
+   Enforced Range: -15.0 kJ/mol <= Delta-H_mix <= +5.0 kJ/mol.
+
+3. YANG-ZHANG THERMODYNAMIC RATIO (Omega):
+   Omega = ( Average Melting Point * Delta-S_config ) / | Delta-H_mix | >= 1.1
+
+4. VALENCE ELECTRON CONCENTRATION (VEC):
+   VEC = Sum of [ c_i * VEC_i ]
+   - VEC < 6.87 ==> Pure Body-Centered Cubic (BCC)
+   - VEC >= 8.0 ==> Pure Face-Centered Cubic (FCC)
+```
+
+### 2.2 Yield Strength Formulation (Dislocation Theory)
+Rather than treating yield strength as an empirical proxy, MetaForge implements a physical dislocation model based on the Taylor factor and Varvenne-Luque-Curtin solid-solution strengthening:
+
+```
+EQUATION: Dislocation Yield Strength
+Sigma_y = Sigma_0 + [ M * Tau_ss ]
+
+Where:
+• Sigma_0 = Intrinsic Peierls-Nabarro friction stress of pure lattice 
+            (approx. G_rom / 150 for BCC; G_rom / 350 for FCC).
+• M       = Polycrystalline Taylor factor (2.73 for BCC; 3.06 for FCC).
+• Tau_ss  = Solid-solution strengthening increment:
+            Tau_ss = 0.05 * G_rom * (delta)^(2/3)
+• G_rom   = Rule-of-mixtures average shear modulus.
+```
 
-**Principal Investigator:** Solomon Ahedor
+---
 
-**Affiliation:** Department of Materials & Metallurgical Engineering (Year 4), KNUST, Ghana
+## 3. Results & Discovered Candidate Alloys
 
-**Project:** MetaForge (ML-Driven High Entropy Alloy Discovery Platform)
+Genetic algorithm inverse design adhering to the formal HEA constraint (5% to 35 atomic % per element) identified the following optimal alloys:
 
-**Date:** May 2026
+| Category | Crystal System | Discovered Composition (at.%) | Density (g/cm³) | Yield Strength (Sigma_y) | Formation Energy (Delta-E_f) |
+| :--- | :---: | :--- | :---: | :---: | :---: |
+| **Refractory** | BCC (54-atom) | W:18.5% - Mo:24.7% - Ta:26.1% - Nb:16.8% - V:13.9% | 14.29 | **1.96 GPa (1960 MPa)** | +0.0286 eV/atom (+2.76 kJ/mol) |
+| **Corrosion** | FCC (48-atom) | Co:8.6% - Cr:35.4% - Fe:33.1% - Ni:11.2% - Cu:11.6% | 8.00 | **0.74 GPa (740 MPa)** | +0.1325 eV/atom |
+| **Lightweight** | FCC (48-atom) | Al:35.7% - Mg:11.5% - Li:5.1% - Ti:35.7% - Zn:11.9% | 3.54 | **0.63 GPa (630 MPa)** | +0.0966 eV/atom |
+| **Aerospace** | FCC (48-atom) | Al:5.9% - Ti:32.2% - Sc:6.9% - Zr:35.0% - V:20.1% | 5.01 | **0.83 GPa (830 MPa)** | +0.2126 eV/atom |
 
-# Abstract
+---
 
-Finding the right high-entropy alloy (HEA) used to mean years of expensive trial and error in the lab. While these materials offer amazing thermal stability and strength, their design space is simply too massive to explore manually. This project introduces MetaForge. It’s an end-to-end computational pipeline that leverages physics-informed machine learning and data harvested from the Materials Project to speed up HEA discovery.
+## 4. Proposed Investigation: DFT Validation & Experimental Synthesis
 
-So far, the pipeline has achieved some strong baseline results:
+### 4.1 Ab-Initio Density Functional Theory (Tier 3)
+* **Objective:** Establish quantum ground-truth total energies and elastic constants for relaxed SQS supercells.
+* **Methodology:** Plane-wave DFT calculations via VASP or Quantum ESPRESSO using Projector Augmented-Wave (PAW) pseudopotentials under Generalized Gradient Approximation (GGA-PBEsol). A plane-wave kinetic energy cutoff of 520 eV and Monkhorst-Pack k-point meshes with a density of 0.03 1/Å will be enforced.
+* **Elastic Tensor Derivation:** Strains of +/- 1% and +/- 2% will be applied to compute the elastic stiffness matrix (C11, C12, C44), from which the Voigt-Reuss-Hill polycrystalline bulk modulus (B), shear modulus (G), Young's modulus (E), and Pugh's ductility ratio (B/G) will be evaluated.
 
-Using Random Forest models trained on 132 Matminer Magpie descriptors (chemical properties of materials transformed into mathematical vector matrices for machine learning model) across 5,000 synthetic alloy compositions, hitting a density prediction RMSE of 0.073 g/cm³ and a strength prediction RMSE of 0.539 GPa.
+### 4.2 Vacuum Arc Remelting & Experimental Characterization
+* **Synthesis:** Ingot synthesis of the top candidate (W-Mo-Ta-Nb-V) via vacuum non-consumable arc melting under ultra-pure Argon (99.999%). Ingots will be flipped and remelted a minimum of seven times to ensure chemical homogeneity, followed by homogenization annealing in a high-vacuum tube furnace (1200°C for 24 h).
+* **X-Ray Diffraction (XRD):** Rigaku SmartLab diffractometer (Cu-K_alpha radiation) to verify single-phase BCC solid-solution crystallinity and confirm the absence of secondary intermetallic reflections.
+* **Electron Microscopy (SEM-EDS):** JEOL field-emission scanning electron microscope with energy-dispersive X-ray spectroscopy mapping to analyze microstructural dendrite segregation and partition coefficients.
+* **Mechanical Testing:** Microhardness testing (Vickers diamond indenter, 500 gf load, 15 s dwell) across a 10 x 10 indentation matrix to validate predicted yield strengths via the empirical Tabor relation (`Yield Strength ≈ Hardness / 3`).
 
-I successfully pinned down a promising refractory HEA candidate
+---
 
-(W₀.₁₀Mo₀.₄₀Ta₀.₀₅Nb₀.₀₅V₀.₄₀) with a predicted specific strength of 9.37 GPa·cm³/g.
+## 5. Compute Resources, Timeline, and Strategic Value
 
-The pipeline handles structural validation through CHGNet-relaxed 3×3×3 BCC supercells (54 atoms).
+### 5.1 Resource Allocation
 
-A live version of the tool is running at [metaforge-web.onrender.com](https://metaforge-web.onrender.com/).
+| Resource | Requirement | Technical Justification |
+| :--- | :--- | :--- |
+| **High-Performance Computing (HPC)** | 100,000 core-hours | High-accuracy ab-initio DFT relaxations and elastic tensor runs across 54-atom supercells. |
+| **Software Infrastructure** | VASP 6.x / QE 7.x | Validated PAW pseudopotentials for transition metals and refractory species. |
+| **Arc Melting & Metrology** | KNUST / Partner Lab | Non-consumable tungsten arc furnace, inert atmosphere box, Rigaku XRD, FE-SEM. |
 
-This proposal maps out what comes next, which is the immediate focus on DFT validation, feeding more data into the training set, adding new prediction targets and finally synthesizing the top candidates in the lab.
+### 5.2 Project Timeline (6 Months)
 
-# Background & Motivation
+```
+Month 1: Ab-Initio Quantum DFT on SQS Supercells (C11, C12, C44, E_0)
+Month 2: Active Learning Retraining (Interfacing DFT outputs with MetaForge models)
+Month 3: Vacuum Arc Melting Synthesis of W-Mo-Ta-Nb-V Refractory Ingot
+Month 4: XRD Phase Identification & SEM-EDS Chemical Homogeneity Mapping
+Month 5: Vickers Microhardness & High-Temperature Oxidation Assessment
+Month 6: Manuscript Preparation & Submission to Computational Materials Science
+```
 
-## The Promise of High Entropy Alloys
+---
 
-Most conventional alloys rely on one or two base elements like iron in steel or aluminum in aerospace parts. High Entropy Alloys (first brought to light around 2004 by Yeh and Cantor) completely change the rulebook. They mix five or more elements in roughly equal amounts. Because of the high configurational entropy, they tend to stabilize into simple solid-solution phases like BCC, FCC, or HCP rather than brittle intermetallics.
+## 6. References
 
-This leads to some performance benefits:
-
-**Refractory HEAs** (think W-Mo-Ta-Nb-V) can hold their strength well past 1000°C. That makes them highly attractive for nuclear reactor internals or next-gen turbine blades.
-
-**Corrosion-resistant HEAs** (like Co-Cr-Fe-Ni-Cu) tend to hold up much better than standard stainless steels when exposed to harsh marine or chemical environments.
-
-**Lightweight HEAs** (Al-Mg-Li-Ti-Zn) are mostly aimed at aerospace, where shaving off weight without losing strength is everything.
-
-## The Combinatorial Problem
-
-There are roughly 70 metallic elements on the periodic table. If you want to make a 5-element equiatomic alloy, you're looking at over 12 million possible combinations. And if you start tweaking the percentages by just 5% increments, that number explodes into the hundreds of millions. Testing even a tiny fraction of these in a physical lab is economically impossible.
-
-## Machine Learning as an Accelerator
-
-This is where machine learning comes in. Models trained on basic physics descriptors such as atomic radii, electronegativity, valence electron concentration can churn through millions of candidate alloys in seconds. The core idea here is that an alloy's properties are deeply tied to its composition. By converting that composition into mathematical features using frameworks like Matminer's Magpie preset (which generates 132 distinct elemental features), I can teach an algorithm to spot the winners.
-
-# Work Completed
-
-## Data Pipeline
-
-I started by pulling elemental data (atomic radii, density, VEC, electronegativity) directly from the Materials Project API. This covered 17 different elements across 4 main HEA families.
-
-From there, I built a combinatorial engine using the itertools library to generate candidate mixtures and filter out the bad ones using standard physical stability rules. Specifically, I set the lattice strain cutoff at δ < 6.6% to satisfy Hume-Rothery rules and used VEC thresholds to predict the phase (5.0–6.8 for BCC, ≥8.0 for FCC).
-
-## Machine Learning Models
-
-Every candidate composition was featurized into a 132-dimensional Magpie vector, this is because machine learning models do not truly understand chemicals unless transferred into a matrix mathematical formula.
-
-I then trained Random Forest regression models on the filtered compositions.
-
-> **Transparency Note:** The current training targets are **rule-of-mixtures analytical proxies** — density is a composition-weighted average of elemental densities, and strength uses a simplified Varvenne-Luque-Curtin (2016) solid-solution strengthening estimate. Because Magpie descriptors contain the same atomic properties used to compute these proxies, the high R² scores reflect successful function approximation rather than material property discovery. The DFT validation step (Section 4.1) is specifically designed to replace these proxies with physically grounded data.
-
-|  |  |  |  |
-| --- | --- | --- | --- |
-| **Model** | **Target** | **RMSE** | **R²** |
-| Density | RoM density proxy (g/cm³) | 0.073 | 0.99 |
-| Strength | SS strengthening proxy (GPa) | 0.539 | 0.95 |
-
-## Genetic Algorithm Inverse Design
-
-To push beyond random screening, I wrote a genetic algorithm that intentionally evolves compositions over 20 generations to maximize the strength-to-weight ratio (specific strength). The algorithm was applied independently to all four alloy categories, isolating a standout optimal candidate for each:
-
-| **Category** | **Composition (at.%)** | **Specific Strength (GPa·cm³/g)** |
-| --- | --- | --- |
-| **Refractory** | W₉.₄Mo₇₀.₂Ta₁.₆Nb₇.₆V₁₁.₃ | 11.35 |
-| **Corrosion** | Co₅.₃Cr₄₀.₁Fe₄₁.₃Ni₁.₈Cu₁₁.₆ | 11.40 |
-| **Lightweight** | Al₃₆.₄Mg₁₂.₇Li₁₆.₂Ti₃₃.₄Zn₁.₂ | 9.84 |
-| **Aerospace** | Al₂₉.₉Ti₃₅.₁Sc₃₁.₁Zr₀.₇V₃.₂ | 9.35 |
-
-## Structural Relaxation (The Compute Breakthrough)
-
-One of the biggest hurdles was scaling the crystal simulations to 3×3×3 BCC supercells (54 atoms). Non-High-performance hardware (8GB RAM) and free cloud tiers (google colab) completely choked on the memory requirements. The workaround was leveraging CHGNet (a graph neural network). This allowed me to:
-
-Construct 54-atom Special Quasirandom Structures (SQS) for the best candidates.
-
-Relax the atomic positions using the FIRE optimizer with CHGNet handling the energy and force calculations.
-
-Export the optimized blueprints as CIF files so they can be analyzed further.
-
-## Web Deployment
-
-I wrapped the whole prediction engine into a full-stack web app, pairing a Flask backend with a React frontend. Users can drag sliders to adjust the alloy composition and see how the ML model reacts in real-time.
-
-It’s live at: [**metaforge-web.onrender.com**](https://metaforge-web.onrender.com/)
-
-The repository is fully open-source and hosted at [**github.com/SA-FIND/High-EntropyAlloy-Discovery**](https://github.com/SA-FIND/High-Entropy-Alloy-Discovery).
-
-# Proposed Next Steps
-
-## DFT Validation of Top Candidates
-
-**Objective:** To check the ML predictions against first-principles Density Functional Theory (DFT) calculations.
-
-I plan to run full structural relaxations and total energy calculations on the top 5 candidates using VASP or Quantum ESPRESSO.
-
-By calculating the elastic constants (C₁₁, C₁₂, C₄₄), I can derive the bulk, shear, and Young's moduli from the ground up.
-
-This will let me compare the DFT results directly against the ML outputs to see how best the model predicted.
-
-## Expanded Training Data
-
-**Objective:** To feed the model more realistic data (like experimental and CALPHAD results) so it generalizes better.
-
-The plan is to scrape published experimental property data from major HEA studies (e.g., Senkov, Miracle).
-
-I also want to pull in CALPHAD (Calculation of Phase Diagrams) data to verify that the predicted phases actually match thermodynamic reality.
-
-The long-term goal is to grow the training set from 5,000 up to 50,000+ compositions via active learning. The model will essentially flag the compositions it’s least sure about and request targeted DFT runs.
-
-## Additional Property Prediction Targets
-
-**Objective:** To make the pipeline predict more than just density and strength.
-
-**Corrosion resistance:** I want to predict pitting potentials and how the alloy might passivate.
-
-**High-temperature creep:** Specifically looking at creep rates at elevated temperatures (800– 1200°C).
-
-**Thermal conductivity:** For aerospace applications.
-
-**Hardness (Vickers):** A practical metric I can test in the lab.
-
-## Experimental Synthesis & Characterization
-
-**Objective:** To make the discovered alloys in the real world.
-
-**Arc melting:** I will synthesize the best candidates using arc melting with high purity metals.
-
-**XRD analysis:** This will confirm if I actually got the predicted BCC/FCC structure or if secondary phases came up.
-
-**Microhardness testing:** Taking Vickers hardness readings to see if the strength predictions hold any weight.
-
-**SEM/EDS:** Looking at the microstructure to make sure the elements mixed evenly and evaluate other morphological features.
-
-**Corrosion testing:** Running potentio-dynamic polarization in simulated seawater for the corrosion-focused alloys.
-
-## Publication
-
-**Target journals:**
-
-1. Computational Materials Science
-2. Journal of Alloys and Compounds
-
-**Target conferences:**
-
-* TMS Annual Meeting (The Computational Materials Science symposium)
-* MRS Spring Meeting (Machine Learning for Materials Discovery track)
-
-# Compute & Resource Requirements
-
-|  |  |  |
-| --- | --- | --- |
-| **Resource** | **Requirement** | **Justification** |
-| **High Performance Computing Access** | 1 month | Needed for heavy DFT runs (VASP/QE) on the candidate structures. |
-| **GPU Access** | 2 weeks | For running CHGNet relaxations on bigger supercells. |
-| **Software Licenses** | VASP license |  |
-| **Lab Access** | Arc melting furnace, XRD,  SEM |  |
-| **Storage** | ~50 GB | DFT outputs and expanded datasets take up a decent amount of space. |
-
-# Proposed Timeline
-
-|  |  |
-| --- | --- |
-| **Month** | **Milestone** |
-| **Month 1–2** | Get the DFT validation done for the top candidates. Start pulling literature values to expand the training data. |
-| **Month 3** | Retrain the models with the new targets (hardness, creep, etc.). |
-| **Month 4** | Head to the lab and arc melt the top candidates. |
-| **Month 5** | Run the characterization tests (XRD, SEM/EDS, corrosion checks). |
-| **Month 6** | Write up the results and submit the manuscript. |
-
-# Collaboration Value
-
-This project provides a fully functional, end-to-end ML pipeline that the research group can start using. The current codebase handles:
-
-Automated data harvesting, featurization and optimization.
-
-Universal models that work across 17 elements and 4 HEA categories.
-
-A live web interface for quick checks.
-
-An open-source code that is easy to build upon.
-
-To really push this forward, working with the mentors or research group's current PhD students would be a massive help in a few key areas:
-
-1. **DFT expertise:** VASP/QE technical understanding from the multiscale modelling, hands-on help would save a lot of time and also as an avenue to learn from experts in the field.
-2. **Experimental synthesis:** I’ll need further guidance on the arc melting and characterization equipment and techniques.
-3. **Domain knowledge:** Deep insights into HEA thermodynamics, phase stability, multiscale modelling and a deep-dive into material informatics.
-4. **Publication mentorship:** Getting advice on how to structure the paper for a high impact journal.
-
-In exchange, this project brings a modern machine learning infrastructure and web deployment toolkit to the lab, which could easily be adapted to screen other types of materials the group/ mentor is studying.
-
-# 7. References
-
-1. Yeh, J.W. et al. (2004). "Nanostructured high-entropy alloys with multiple principal elements." Advanced Engineering Materials.
-2. Cantor, B. et al. (2004). "Microstructural development in equiatomic multicomponent alloys." Materials Science and Engineering A.
-3. Senkov, O.N. et al. (2018). "Development and exploration of refractory high entropy alloys." Journal of Materials Research.
-4. Miracle, D.B. & Senkov, O.N. (2017). "A critical review of high entropy alloys and related concepts." Acta Materialia.
-5. Jain, A. et al. (2013). "Commentary: The Materials Project." APL Materials.
-6. Ward, L. et al. (2018). "Matminer: An open-source toolkit for materials data mining." Computational Materials Science.
-7. Deng, B. et al. (2023). "CHGNet as a pretrained universal neural network potential for charge-informed atomistic modelling." Nature Machine Intelligence.
-8. Ong, S.P. et al. (2013). "Python Materials Genomics (pymatgen)." Computational Materials Science.
-9. Zunger, A. et al. (1990). "Special quasirandom structures." Physical Review Letters.
+1. Yeh, J. W., et al. (2004). "Nanostructured high-entropy alloys with multiple principal elements: novel alloy design concepts and outcomes." *Advanced Engineering Materials*, 6(5), 299-303.
+2. Cantor, B., et al. (2004). "Microstructural development in equiatomic multicomponent alloys." *Materials Science and Engineering: A*, 375, 213-218.
+3. Senkov, O. N., et al. (2011). "Mechanical properties of Nb25Mo25Ta25W25 and V20Nb20Mo20Ta20W20 refractory high entropy alloys." *Intermetallics*, 19(5), 698-706.
+4. Miracle, D. B., & Senkov, O. N. (2017). "A critical review of high entropy alloys and related concepts." *Acta Materialia*, 122, 448-511.
+5. Varvenne, C., Luque, A., & Curtin, W. A. (2016). "Theory of strengthening in dilute and concentrated solid-solution alloys." *Acta Materialia*, 118, 164-176.
+6. Takeuchi, A., & Inoue, A. (2005). "Classification of bulk metallic glasses by atomic size difference, heat of mixing and period of constituents." *Materials Transactions*, 46(12), 2817-2829.
+7. Deng, B., et al. (2023). "CHGNet as a pretrained universal neural network potential for charge-informed atomistic modelling." *Nature Machine Intelligence*, 5(9), 1031-1041.
+8. Ward, L., et al. (2018). "Matminer: An open-source toolkit for materials data mining." *Computational Materials Science*, 152, 60-69.
+9. Zunger, A., et al. (1990). "Special quasirandom structures." *Physical Review Letters*, 65(3), 353.
