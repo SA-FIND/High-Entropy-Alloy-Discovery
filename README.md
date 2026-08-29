@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![Framework: ICME](https://img.shields.io/badge/ICME-Multi--Fidelity-teal.svg)](#hierarchical-multi-fidelity-discovery-framework)
+[![Materials Informatics](https://img.shields.io/badge/Materials%20Informatics-CHGNet%20%7C%20Pymatgen-purple.svg)](https://github.com/SA-FIND/High-Entropy-Alloy-Discovery)
 
 ## Overview
 
@@ -51,6 +53,14 @@ graph TD
 ```
 
 > **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline verifies that Tier 1 proxies are smoothly recoverable from Magpie features, while Tier 2 CHGNet relaxations reveal the true non-linear atomic volume contractions (+5.1% in refractory systems) that linear proxies omit.
+
+### Comparative Positioning: Relation to State-of-the-Art Calculators
+In contemporary materials informatics, forward descriptor calculators such as **HEA-Bench** (*Fieser, Dewanjee, & Hu, Materials 2026, [DOI: 10.3390/ma19143075](https://doi.org/10.3390/ma19143075)*) provide rigorous closed-form baseline calculations for classical thermodynamic parameters ($\delta, \text{VEC}, \Delta H_{mix}, \Omega$).
+
+**MetaForge incorporates these established empirical boundaries as its Tier 1 feasibility filters**, but expands beyond forward screening into an **end-to-end inverse design platform**:
+* **From Forward Calculation to Inverse Discovery:** Rather than requiring manual trial compositions, MetaForge deploys a Genetic Algorithm across the multi-element simplex to actively solve the inverse problem—discovering non-intuitive, high-specific-strength Pareto candidates.
+* **From Empirical Proxies to Universal GNN Potentials:** While classical calculators stop at analytical closed-form equations, MetaForge takes Pareto candidates directly into **Tier 2 atomistic relaxation via CHGNet** (a universal Crystal Graph Neural Network potential) to capture real local lattice distortion, short-range order (SRO), and volume contractions (+5.1% in refractory systems).
+* **Interactive 3D Crystallography:** Couples real-time ML surrogate inference with a live WebGL supercell viewer, allowing researchers to inspect 54-atom BCC and 48-atom FCC lattices dynamically.
 
 ---
 
@@ -211,15 +221,41 @@ This repository includes a `render.yaml` Blueprint for direct deployment on Rend
 
 ---
 
-## License & Attribution
+## Citation
+
+If you use MetaForge in your research, academic proposals, or materials discovery workflows, please cite:
+
+```bibtex
+@software{ahedor2026metaforge,
+  author       = {Ahedor, Solomon},
+  title        = {MetaForge: Machine Learning-Accelerated High-Entropy Alloy Discovery via Multi-Fidelity ICME and Neural Interatomic Potentials},
+  year         = {2026},
+  publisher    = {GitHub},
+  journal      = {GitHub repository},
+  howpublished = {\url{https://github.com/SA-FIND/High-Entropy-Alloy-Discovery}}
+}
+```
+
+---
+
+## Foundational References & Literature Base
+
+1. **Empirical HEA Phase Prediction & Descriptors:**
+   - Zhang, Y., Zuo, T. T., Tang, Z., et al. *Microstructures and properties of high-entropy alloys.* **Prog. Mater. Sci.** 61 (2014) 1–93.
+   - Guo, S., & Liu, C. T. *Phase stability in high entropy alloys: Formation of solid-solution phase or amorphous phase.* **Prog. Nat. Sci.: Mater. Int.** 21 (2011) 433–446.
+   - Fieser, D., Dewanjee, U., & Hu, A. *HEA-Bench: An AI-Agent-Optimized Calculator of High-Entropy Alloy and Oxide Descriptors and Phase-Prediction Rules.* **Materials** 19(14) (2026) 3075. [DOI: 10.3390/ma19143075](https://doi.org/10.3390/ma19143075).
+2. **Dislocation Mechanics & Solid-Solution Strengthening:**
+   - Varvenne, C., Luque, A., & Curtin, W. A. *Theory of strengthening in dilute and concentrated random solid solutions.* **Acta Materialia** 118 (2016) 164–176.
+   - Toda-Caraballo, I., & Rivera-Díaz-del-Castillo, P. E. J. *A general formulation for solid solution hardening in high entropy alloys.* **Acta Materialia** 85 (2015) 14–23.
+3. **Graph Neural Network Interatomic Potentials:**
+   - Deng, B., Zhong, P., Jun, K., et al. *CHGNet: A pretrained universal neural network potential for charge-informed atomistic modeling.* **Nature Machine Intelligence** 5 (2023) 1031–1041.
+4. **Materials Informatics Core:**
+   - Jain, A., Ong, S. P., Hautier, G., et al. *Commentary: The Materials Project: A materials genome approach to accelerating materials innovation.* **APL Materials** 1 (2013) 011002.
+   - Ward, L., Dunn, A., Faghaninia, A., et al. *Matminer: An open source toolkit for materials data mining.* **Comput. Mater. Sci.** 152 (2018) 60–69.
+   - Ong, S. P., Richards, W. D., Jain, A., et al. *Python Materials Genomics (pymatgen): A robust, open-source python library for materials analysis.* **Comput. Mater. Sci.** 68 (2013) 314–319.
+
+---
+
+## License
 
 This project is open-source under the **MIT License**.
-
-**Key Dependencies:**
-- Materials Project *(Jain et al., APL Materials, 2013)*
-- Matminer *(Ward et al., Comput. Mater. Sci., 2018)*
-- CHGNet *(Deng et al., Nature Machine Intelligence, 2023)*
-- Pymatgen *(Ong et al., Comput. Mater. Sci., 2013)*
-
-**Strengthening Model:**
-- Varvenne, Luque & Curtin, *Acta Materialia* 118 (2016) 164-176
