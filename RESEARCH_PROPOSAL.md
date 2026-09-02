@@ -3,7 +3,7 @@
 **Principal Investigator:** Solomon Ahedor  
 **Affiliation:** Department of Materials & Metallurgical Engineering, Kwame Nkrumah University of Science and Technology (KNUST), Kumasi, Ghana  
 **Project:** MetaForge (Computational Materials Informatics Platform)  
-**Date:** Revised Academic Edition — May 2026  
+**Date:** Revised Academic Edition — September 2026  
 
 ---
 
