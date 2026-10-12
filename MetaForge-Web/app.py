@@ -3,6 +3,7 @@ import logging
 from flask import Flask, request, jsonify, render_template, make_response, send_from_directory
 from flask_cors import CORS
 import joblib
+import json
 from pymatgen.core import Composition
 from matminer.featurizers.composition import ElementProperty
 import warnings
@@ -74,6 +75,21 @@ for web_cat, file_cat in categories_map.items():
             logger.info(f"Loaded energy model for {web_cat}.")
     except Exception as e:
         logger.warning(f"Could not load models for {web_cat}: {e}")
+
+# Yield strength trained on MEASURED data (MPEA dataset, RT compression); see
+# scripts/train_measured_strength.py. Falls back to the per-category proxy models.
+measured_strength = None
+measured_meta = {}
+try:
+    measured_strength = joblib.load(os.path.join(BASE_DIR, 'models', 'ml_strength_measured.model'))
+    with open(os.path.join(BASE_DIR, 'models', 'ml_strength_measured.json'), encoding='utf-8') as f:
+        measured_meta = json.load(f)
+    logger.info("Loaded measured-data strength model.")
+except Exception as e:
+    logger.warning(f"Measured strength model not loaded, using proxy models: {e}")
+
+# An element is "covered" if at least this many measured alloys contain it.
+MIN_ALLOYS_PER_ELEMENT = 20
 
 ep_feat = ElementProperty.from_preset("magpie")
 logger.info("All components initialized successfully.")
@@ -199,14 +215,28 @@ def predict():
         
         # Predicting bulk density and strength metrics
         density = ml_density.predict([features])[0]
-        strength = ml_strength.predict([features])[0]
+        if measured_strength is not None:
+            strength = measured_strength.predict([features])[0]
+            counts = measured_meta.get('element_counts', {})
+            sparse = sorted(el for el, frac in comp_dict.items()
+                            if frac >= 0.05 and counts.get(el, 0) < MIN_ALLOYS_PER_ELEMENT)
+            strength_source = (f"Measured-data model (MPEA, RT compression, "
+                               f"CV MAE {measured_meta.get('cv_mae_gpa', 0):.2f} GPa)")
+            coverage_warning = (f"Few measured alloys contain {', '.join(sparse)}; treat this strength as an extrapolation."
+                                if sparse else None)
+        else:
+            strength = ml_strength.predict([features])[0]
+            strength_source = "Analytical proxy (solid-solution model), not measured data"
+            coverage_warning = None
         score = strength / density if density > 0 else 0
         
         res = {
             'density': round(float(density), 2),
             'strength': round(float(strength), 2),
             'score': round(float(score), 2),
-            'composition': {el: round(frac * 100, 1) for el, frac in comp_dict.items()}
+            'composition': {el: round(frac * 100, 1) for el, frac in comp_dict.items()},
+            'strength_source': strength_source,
+            'coverage_warning': coverage_warning,
         }
         
         if ml_energy is not None:

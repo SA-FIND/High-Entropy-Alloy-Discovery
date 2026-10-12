@@ -49,3 +49,5 @@ local/
 scratch/
 temp/
 project_files/
+# Downloaded external data (fetched by scripts)
+data/external/**/*.csv

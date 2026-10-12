@@ -78,6 +78,11 @@ element_melting_points = {
     'Sc': 1814, 'Zr': 2128
 }
 
+# Yield strength model trained on MEASURED data (scripts/train_measured_strength.py).
+# When present, the GA optimises measured-data strength instead of the analytical proxy.
+MEASURED_STRENGTH_PATH = os.path.join("MetaForge-Web", "models", "ml_strength_measured.model")
+ml_strength_measured = joblib.load(MEASURED_STRENGTH_PATH) if os.path.exists(MEASURED_STRENGTH_PATH) else None
+
 elemental_ref_energies = {
     'W': -12.95, 'Mo': -10.85, 'Ta': -11.85, 'Nb': -10.20, 'V': -8.94,
     'Co': -7.11, 'Cr': -9.51, 'Fe': -8.24, 'Ni': -5.47, 'Cu': -4.10,
@@ -354,6 +359,9 @@ best_alloys_discovered = {}
 
 # Main loop over alloy categories
 for cat, elements_dict in alloy_categories.items():
+    # Fixed seeds per category so the GA optimum is reproducible run to run.
+    random.seed(42)
+    np.random.seed(42)
     print(f"\n{'='*60}")
     print(f"Processing Category: {cat.upper()}")
     print(f"{'='*60}")
@@ -505,6 +513,7 @@ for cat, elements_dict in alloy_categories.items():
     
     sampled_energies = []
     sampled_features = []
+    n_label_fallbacks = 0
     
     template = structure_templates[cat]
     total_atoms = len(template["basis_species"]) * np.prod(template["supercell"])
@@ -521,6 +530,7 @@ for cat, elements_dict in alloy_categories.items():
                 final_energy = relax_result["trajectory"].energies[-1]
                 energy_per_atom = final_energy / total_atoms
             except Exception as e:
+                n_label_fallbacks += 1
                 energy_per_atom = sum(comp_dict[el] * elemental_ref_energies.get(el, -7.0) for el in elements)
         else:
             # Physical reference state energy + Miedema mixing enthalpy (1 eV/atom = 96.485 kJ/mol)
@@ -530,6 +540,8 @@ for cat, elements_dict in alloy_categories.items():
         sampled_energies.append(energy_per_atom)
         sampled_features.append(feats)
         
+    if CHGNET_AVAILABLE:
+        print(f"  [CHGNet] Energy labels: {sample_size - n_label_fallbacks} CHGNet, {n_label_fallbacks} reference-energy fallbacks")
     X_energy = np.array(sampled_features)
     y_energy = np.array(sampled_energies)
     
@@ -571,16 +583,22 @@ for cat, elements_dict in alloy_categories.items():
         normed = clipped / np.sum(clipped)
         return {elements[i]: round(float(normed[i]), 3) for i in range(len(elements))}
 
-    # Fitness: specific yield strength balanced with energy minimization stability
+    # Fitness: specific yield strength minus a penalty on FORMATION energy.
+    # The penalty must use formation energy (E - sum x_i E_ref,i). The old code used
+    # total energy (~ -11 eV/atom), whose term outweighed s/d (~0.1) by ~50x, so the
+    # GA was selecting for heavy-element content, not stability.
+    strength_model = ml_strength_measured if ml_strength_measured is not None else ml_strength
+    print(f"  [GA] Strength source: {'measured-data model (MPEA)' if ml_strength_measured is not None else 'analytical proxy'}")
     def evaluate_fitness(alloy):
         comp_obj = Composition(alloy)
         feats = [ep_feat.featurize(comp_obj)]
         d = ml_density.predict(feats)[0]
-        s = ml_strength.predict(feats)[0]
+        s = strength_model.predict(feats)[0]
         e = ml_energy.predict(feats)[0]
         if d <= 0: return -9999.0, d, s, e
-        beta = 0.5  # Energy penalty weighting
-        score = (s / d) - beta * e
+        e_form = e - sum(alloy[el] * elemental_ref_energies.get(el, -7.0) for el in alloy)
+        beta = 0.5  # eV/atom -> score units; e_form ~ +-0.1 so both terms are comparable
+        score = (s / d) - beta * e_form
         return score, d, s, e
 
     # Initializing population
@@ -647,10 +665,14 @@ for cat, elements_dict in alloy_categories.items():
     if CHGNET_AVAILABLE:
         print(f"\n  [CIF] Relaxing {cat} {total_atoms}-atom {template['type']} SQS blueprint using CHGNet...")
         try:
-            relax_result = relaxer.relax(dummy_struct, steps=100)
+            # Same settings as scripts/benchmark_chgnet.py: atoms and cell, fmax 0.05 eV/A.
+            relax_result = relaxer.relax(dummy_struct, fmax=0.05, steps=500, relax_cell=True, verbose=False)
             relaxed_struct = relax_result["final_structure"]
             final_traj_energy = relax_result["trajectory"].energies[-1] / total_atoms
-            did_relax = True
+            n_steps = len(relax_result["trajectory"].energies)
+            did_relax = n_steps < 500
+            vol_change = 100 * (relaxed_struct.volume - dummy_struct.volume) / dummy_struct.volume
+            print(f"  [CHGNet] {'Converged' if did_relax else 'NOT converged'} in {n_steps} steps; volume change vs blueprint: {vol_change:+.2f}%")
         except Exception as e:
             print(f"  [!] CHGNet relaxation error: {e}, falling back to unrelaxed blueprint.")
             relaxed_struct = dummy_struct.copy()
