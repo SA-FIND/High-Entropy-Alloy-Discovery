@@ -723,6 +723,8 @@
                         <div class="result-label">Predicted Yield Strength (σ<sub>y</sub>)</div>
                         <div class="result-value val-strength"><span id="val-strength">0.00</span><span
                                 class="result-unit">GPa</span></div>
+                        <div id="strength-source" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;"></div>
+                        <div id="strength-warning" style="font-size: 0.7rem; color: #f5a623; margin-top: 2px;"></div>
                     </div>
                     <div class="result-tile" id="energyTile" style="display: none;">
                         <div class="result-label">GNN Ground-State Energy (E)</div>
@@ -1018,6 +1020,8 @@
                 animateValue(densityEl, oldDensity, data.density, 400, 2);
                 animateValue(strengthEl, oldStrength, data.strength, 400, 2);
                 animateValue(scoreEl, oldScore, data.score, 400, 2);
+                document.getElementById('strength-source').textContent = data.strength_source || '';
+                document.getElementById('strength-warning').textContent = data.coverage_warning || '';
 
                 if (data.energy !== undefined && data.energy !== null) {
                     energyTile.style.display = 'block';

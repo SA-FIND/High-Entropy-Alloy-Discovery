@@ -1,0 +1,19 @@
+Measured RT compressive YS: 450 tests, 314 distinct alloys (range 0.14 to 3.42 GPa, median 1.29)
+scikit-learn 1.8.0
+
+Grouped 5-fold CV (no alloy in both train and test):
+model                   MAE GPa      R2
+Mean (baseline)           0.412  -0.001
+Ridge                     0.323   0.294
+RandomForest              0.260   0.535
+HistGradientBoosting      0.258   0.564
+--> Selected by CV MAE: HistGradientBoosting
+
+Per category (test rows whose alloy contains >= 3 of the category's elements):
+  Refractory   n= 113  MAE=0.256 GPa  R2=0.477  element counts {'W': 44, 'Mo': 141, 'Ta': 123, 'Nb': 232, 'V': 119}
+  Corrosion    n= 188  MAE=0.279 GPa  R2=0.588  element counts {'Co': 150, 'Cr': 198, 'Fe': 190, 'Ni': 191, 'Cu': 60}
+  Lightweight  n=  14  MAE=0.154 GPa  R2=-3.770  element counts {'Al': 198, 'Mg': 14, 'Li': 9, 'Ti': 256, 'Zn': 12}
+  Aerospace    n=  95  MAE=0.181 GPa  R2=0.499  element counts {'Al': 198, 'Ti': 256, 'Sc': 2, 'Zr': 154, 'V': 119}
+
+Rule-of-mixtures density vs measured (47 alloys): mean error +2.20%, median |error| 0.95%, mean |error| 4.42%, 95th pct |error| 14.35%
+  (Largest errors are porous/Zn-bearing or carbide-containing samples; Li-Mg light alloys read ~7% low.)
