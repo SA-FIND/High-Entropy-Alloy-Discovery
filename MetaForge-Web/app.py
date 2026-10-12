@@ -116,7 +116,7 @@ def sitemap():
 
 @app.route('/structures/<category>')
 def get_structure(category):
-    """Serves the relaxed CIF crystal structure for the requested alloy category."""
+    """Serves the relaxed CIF if one exists, else the unrelaxed blueprint."""
     cat_map = {
         "Refractory Alloy": "Refractory",
         "Corrosion Resistance": "Corrosion",

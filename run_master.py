@@ -643,12 +643,14 @@ for cat, elements_dict in alloy_categories.items():
     print(f"\n  [CIF] Generating {total_atoms}-atom {template['type']} SQS blueprint for top candidate...")
     dummy_struct = build_sqs_structure(best_alloy_ever, template, elements, seed=42, max_mc_steps=500)
         
+    did_relax = False
     if CHGNET_AVAILABLE:
         print(f"\n  [CIF] Relaxing {cat} {total_atoms}-atom {template['type']} SQS blueprint using CHGNet...")
         try:
             relax_result = relaxer.relax(dummy_struct, steps=100)
             relaxed_struct = relax_result["final_structure"]
             final_traj_energy = relax_result["trajectory"].energies[-1] / total_atoms
+            did_relax = True
         except Exception as e:
             print(f"  [!] CHGNet relaxation error: {e}, falling back to unrelaxed blueprint.")
             relaxed_struct = dummy_struct.copy()
@@ -695,7 +697,13 @@ for cat, elements_dict in alloy_categories.items():
     print(f"  [CIF] Saved unrelaxed blueprint to: {file_name_blueprint}")
     
     file_name_relaxed = os.path.join(cif_dir, f"Optimal_{cat}_Relaxed.cif")
-    CifWriter(relaxed_struct).write_file(file_name_relaxed)
-    print(f"  [CIF] Saved relaxed structure to: {file_name_relaxed}")
+    if did_relax:
+        CifWriter(relaxed_struct).write_file(file_name_relaxed)
+        print(f"  [CIF] Saved relaxed structure to: {file_name_relaxed}")
+    else:
+        # Never label an unrelaxed structure as relaxed.
+        print(f"  [!] No CHGNet relaxation happened; NOT writing {file_name_relaxed}.")
+        if os.path.exists(file_name_relaxed):
+            os.remove(file_name_relaxed)
 
 print("\n[2/2] Master Script Complete!")
