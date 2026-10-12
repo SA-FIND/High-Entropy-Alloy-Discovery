@@ -58,7 +58,7 @@ graph TD
     T2 -->|Optimized Blueprints| T3
 ```
 
-> **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline verifies that Tier 1 proxies are smoothly recoverable from Magpie features, while Tier 2 CHGNet relaxations reveal the true non-linear atomic volume contractions (+5.1% in refractory systems) that linear proxies omit.
+> **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline confirms that these proxies are linear in Magpie features (R² ≈ 0.99), so a model trained on them only reproduces the formula. Yield strength is therefore now predicted by a model trained on **measured** data (see *Measured-Data Strength Model* below). Tier 2 CHGNet relaxations are benchmarked against measured lattice parameters (see *Structural Validation*).
 
 ---
 
@@ -97,20 +97,38 @@ The pipeline currently supports four distinct High-Entropy Alloy categories. All
 
 ## Structural Validation (CHGNet GNN Relaxations)
 
-To evaluate the physical validity of the Rule-of-Mixtures (RoM) density proxy, we generated Special Quasirandom Structures (SQS) (54-atom BCC for Refractory, 48-atom FCC for others) for the top candidates and relaxed them using the **CHGNet** graph neural network potential. 
+> **Correction (October 2026).** Earlier versions of this README and the accompanying manuscript reported CHGNet density gaps of up to +5.1% ("non-Vegard contraction"). Those numbers were not produced by a relaxation: the `*_Relaxed.cif` files were byte-identical copies of the unrelaxed blueprints, written by a fallback path when CHGNet was not installed. The files and the claim are withdrawn; `run_master.py` now writes a relaxed CIF only after a converged relaxation.
 
-To ensure the results represent true equilibrium structures and are not relaxation artifacts, we verified force convergence (< 0.1 eV/Å target, achieved in all runs within 35 steps) and evaluated statistical variance across multiple random SQS atomic shuffles (different random seeds).
+To check whether the relaxation step is trustworthy, `scripts/benchmark_chgnet.py` relaxes SQS supercells (54-atom BCC, 48-atom FCC; atoms **and** cell; fmax = 0.05 eV/Å; 3 SQS seeds each) of alloys with measured lattice parameters. Results: `results/chgnet_benchmark.csv`; structures: `data/structures/benchmark/`.
 
-| Category | RoM Density (g/cm³) | CHGNet Density (g/cm³) | Gap (%) | Seed Std Dev (g/cm³) | Verdict |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Refractory** | 9.40 | 9.88 (n=3) | +5.1% | ±0.026 (0.3%) | Real, strong margin |
-| **Corrosion** | 8.00 | 8.27 (n=3) | +3.4% | ±0.033 (0.4%) | Real, solid margin |
-| **Lightweight** | 2.62 | 2.69 (n=8) | +2.8% | ±0.011 (0.4%) | Real, confirmed after widening |
-| **Aerospace** | 3.67 | 3.62 (n=3) | -1.4% | ±0.003 (0.1%) | Real, small but clean effect |
+| Alloy | a, CHGNet (Å) | a vs experiment | Density vs experiment | Volume vs rule of mixtures |
+| :--- | :---: | :---: | :---: | :---: |
+| NbMoTaW (BCC) | 3.240 | +0.83% | −0.52% | +0.95% |
+| NbMoTaWV (BCC) | 3.196 | +0.41% | −0.08% | +0.52% |
+| CoCrFeNi (FCC) | 3.518 | −1.47% | n/a | −5.11% |
+| CoCrFeMnNi (FCC) | 3.515 | −2.36% | n/a | −6.12% |
 
-### Key Findings:
-- **Lattice Relaxation Effects:** The GNN relaxations reveal a clear physical density gap from simple linear rule-of-mixtures predictions, ranging from a +5.1% contraction in Refractory to a -1.4% expansion in Aerospace.
-- **Statistical Significance:** The seed-to-seed standard deviation (representing single-SQS realization noise) is consistently $\le 0.4\%$, leaving a comfortable margin that confirms the density gaps represent real physical bonding trends rather than random shuffle noise. For the Lightweight category, the seed count was widened to $n=8$ to tighten the standard error and confirm the significance of the 2.8% gap.
+Seed-to-seed scatter in *a* is ≤ 0.004 Å. Refractory references: Senkov et al., *Intermetallics* 18 (2010) 1758; FCC values are typical literature XRD values.
+
+### Key Findings
+- **Refractory MPEAs show no volume contraction.** CHGNet matches measured lattice parameters within 1% and density within 0.6%; the relaxed volume is slightly *above* the rule of mixtures.
+- **The 5–6% shrinkage in 3d FCC alloys is a model artefact, not physics.** CHGNet under-predicts the measured lattice parameter, and its predicted Fe/Co/Mn magnetic moments fall during relaxation, consistent with a magnetovolume error of the potential.
+- **The rule-of-mixtures density proxy is sound:** against 47 measured alloys in the MPEA dataset its median error is 0.95%.
+
+## Measured-Data Strength Model
+
+`scripts/train_measured_strength.py` trains yield strength on measured data from the open MPEA dataset (Borg et al., *Scientific Data* 7 (2020) 430): 450 room-temperature compression tests on 314 distinct alloys, featurized with the same 132 Magpie descriptors the web app uses. Validation is 5-fold `GroupKFold` by composition, so no alloy appears in both training and test folds.
+
+| Model | CV MAE (GPa) | CV R² |
+| :--- | :---: | :---: |
+| Predict the mean (baseline) | 0.412 | 0.00 |
+| Ridge | 0.323 | 0.29 |
+| Random Forest | 0.260 | 0.54 |
+| **HistGradientBoosting (selected)** | **0.258** | **0.56** |
+
+Example: NbMoTaW is predicted at 1.09 GPa; Senkov et al. (2011) measured about 1.06 GPa in compression.
+
+**Coverage limits.** Few measured alloys contain Li (9), Mg (14), Zn (12) or Sc (2). For the Lightweight category the per-category CV R² is negative, so its strength predictions are extrapolations; the web app flags any composition with ≥ 5 at.% of an element present in fewer than 20 measured alloys.
 
 ---
 
