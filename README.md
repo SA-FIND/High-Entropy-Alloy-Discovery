@@ -66,7 +66,7 @@ graph TD
 
 MetaForge is being re-scoped to **refractory BCC alloys** (Mo-Nb-Ta-V-W family) with every model checked against measured data. The plan is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
 
-The candidate alloys previously listed here (four families) came from an analytical strength proxy and a genetic algorithm that did not enforce the 5-35 at.% bounds. They are withdrawn and kept only in [`archive/`](archive/). The web app still offers all four families, with a coverage warning where measured data is sparse.
+The candidate alloys previously listed here (four families) came from an analytical strength proxy and a genetic algorithm that did not enforce the 5-35 at.% bounds. They are withdrawn (kept in a local archive, not in this repository). The web app still offers all four families, with a coverage warning where measured data is sparse.
 
 ---
 
@@ -201,7 +201,6 @@ MetaForge/
 ├── render.yaml                  # Cloud deployment configuration
 ├── README.md                    # Project documentation
 ├── docs/PUBLICATION_PLAN.md     # Current plan (refractory scope, validation)
-├── archive/                     # Retired material (old proposal, withdrawn candidates)
 └── LICENSE                      # MIT Open-Source License
 ```
 
