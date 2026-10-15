@@ -62,36 +62,11 @@ graph TD
 
 ---
 
-## Model Performance & Discovered Candidates
+## Status (October 2026)
 
-The pipeline currently supports four distinct High-Entropy Alloy categories. All discovered compositions strictly enforce the **Yeh & Cantor multi-principal element criterion ($5\,\text{at.\%} \le c_i \le 35\,\text{at.\%}$)** via constrained Genetic Algorithm optimization:
+MetaForge is being re-scoped to **refractory BCC alloys** (Mo-Nb-Ta-V-W family) with every model checked against measured data. The plan is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
 
-### 1. Refractory Alloys (BCC, 54-atom supercell)
-- **Yield Strength Model:** RMSE 0.007 GPa | R² 0.994 via 5-fold cross-validation
-- **Density Model:** RMSE 0.046 g/cm³ | R² 0.998 via 5-fold cross-validation
-- **Top Candidate:** `W:18.5% - Mo:24.7% - Ta:26.1% - Nb:16.8% - V:13.9%`
-- **Calibrated Yield Strength ($\sigma_y$):** 1.96 GPa (1960 MPa) | **Density:** 14.29 g/cm³
-- **Formation Energy ($\Delta E_f$):** +0.0286 eV/atom (2.76 kJ/mol; solid-solution stabilized by $\Delta S_{\text{mix}} = 13.4\,\text{J/mol}\cdot\text{K}$)
-
-### 2. Corrosion-Resistant Alloys (FCC, 48-atom supercell)
-- **Yield Strength Model:** RMSE 0.007 GPa | R² 0.973 via 5-fold cross-validation
-- **Density Model:** RMSE 0.011 g/cm³ | R² 0.996 via 5-fold cross-validation
-- **Top Candidate:** `Co:8.6% - Cr:35.4% - Fe:33.1% - Ni:11.2% - Cu:11.6%`
-- **Calibrated Yield Strength ($\sigma_y$):** 0.74 GPa (740 MPa) | **Density:** 8.00 g/cm³
-- **Thermodynamic Ratio ($\Omega$):** 1.15 (single-phase FCC solid solution)
-
-### 3. Lightweight Alloys (FCC, 48-atom supercell)
-- **Yield Strength Model:** RMSE 0.007 GPa | R² 0.994 via 5-fold cross-validation
-- **Density Model:** RMSE 0.018 g/cm³ | R² 0.999 via 5-fold cross-validation
-- **Top Candidate:** `Al:35.7% - Mg:11.5% - Li:5.1% - Ti:35.7% - Zn:11.9%`
-- **Calibrated Yield Strength ($\sigma_y$):** 0.63 GPa (630 MPa) | **Density:** 3.54 g/cm³
-- **Specific Yield Strength:** 178.0 MPa/(g/cm³)
-
-### 4. Aerospace Alloys (FCC, 48-atom supercell)
-- **Yield Strength Model:** RMSE 0.010 GPa | R² 0.937 via 5-fold cross-validation
-- **Density Model:** RMSE 0.071 g/cm³ | R² 0.930 via 5-fold cross-validation
-- **Top Candidate:** `Al:5.9% - Ti:32.2% - Sc:6.9% - Zr:35.0% - V:20.1%`
-- **Calibrated Yield Strength ($\sigma_y$):** 0.83 GPa (830 MPa) | **Density:** 5.01 g/cm³
+The candidate alloys previously listed here (four families) came from an analytical strength proxy and a genetic algorithm that did not enforce the 5-35 at.% bounds. They are withdrawn and kept only in [`archive/`](archive/). The web app still offers all four families, with a coverage warning where measured data is sparse.
 
 ---
 
