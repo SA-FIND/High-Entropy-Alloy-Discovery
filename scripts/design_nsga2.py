@@ -77,11 +77,23 @@ class BoundedRepair(Repair):
 
 
 class HybridPredictor:
-    def __init__(self, d, X):
-        tr = np.arange(len(d))
-        y, p = d.YS_MPa.values, d.physics.values
-        self.res = sm.gbm().fit(X, y - p)
-        self.X, self.y, self.p, self.groups = X, y, p, d.key.values
+    """Hybrid model refitted on all single-phase BCC data, with conformalized quantile
+    intervals calibrated once (out-of-fold, grouped by alloy) so that any new prediction
+    and its 90% interval cost only a few model evaluations."""
+
+    def __init__(self, d, X, alpha=0.10):
+        y, p, g = d.YS_MPa.values, d.physics.values, d.key.values
+        r = y - p
+        self.res = sm.gbm().fit(X, r)
+        self.q_lo = sm.gbm(quantile=0.05).fit(X, r)
+        self.q_hi = sm.gbm(quantile=0.95).fit(X, r)
+        from sklearn.model_selection import GroupKFold
+        scores = np.empty(len(r))
+        for a, b in GroupKFold(n_splits=5).split(X, groups=g):
+            lo, hi = sm._quantile_band(X[a], r[a], X[b])
+            scores[b] = np.maximum(lo - r[b], r[b] - hi)
+        n = len(scores)
+        self.qhat = float(np.quantile(scores, min(1.0, np.ceil((n + 1) * (1 - alpha)) / n)))
         self.scaler = StandardScaler().fit(X[:, :-2])
         alloys = d.drop_duplicates("key")
         Z = self.scaler.transform(X[alloys.index, :-2])
@@ -90,56 +102,44 @@ class HybridPredictor:
         self.Z = Z
         self.doa_threshold = float(np.percentile(dist.min(1), 95))
 
-    def features(self, f, T_C):
-        mag = np.array(ep.featurize(Composition(f)))
-        return np.concatenate([mag, [T_C, 0.0]])  # compression test
+    @staticmethod
+    def magpie(f):
+        return np.array(ep.featurize(Composition(f)))
 
-    def predict(self, f, T_C):
-        xf = self.features(f, T_C)[None, :]
+    def predict(self, f, T_C, mag=None):
+        """(point, lower, upper, physics) in MPa for a compression test at T_C."""
+        mag = self.magpie(f) if mag is None else mag
+        xf = np.concatenate([mag, [T_C, 0.0]])[None, :]
         phys = 1000 * float(predict_rom(f, T_C + 273.15))
-        lo, hi = sm.interval(self.X, self.y, self.p, xf, np.array([phys]), self.groups) \
-            if getattr(self, "_with_pi", False) else (None, None)
-        return phys + float(self.res.predict(xf)[0]), phys, lo, hi
+        point = phys + float(self.res.predict(xf)[0])
+        lo = phys + float(self.q_lo.predict(xf)[0]) - self.qhat
+        hi = phys + float(self.q_hi.predict(xf)[0]) + self.qhat
+        return point, lo, hi, phys
 
-    def doa_distance(self, f):
-        z = self.scaler.transform(np.array(ep.featurize(Composition(f)))[None, :])
+    def doa_distance(self, f, mag=None):
+        mag = self.magpie(f) if mag is None else mag
+        z = self.scaler.transform(mag[None, :])
         return float(np.sqrt(((self.Z - z) ** 2).sum(1)).min())
 
 
 class Problem(ElementwiseProblem):
-    def __init__(self, model, qhat_lo):
+    def __init__(self, model):
         super().__init__(n_var=len(EL), n_obj=2, n_ieq_constr=2, xl=0.0, xu=0.35)
-        self.m, self.qlo = model, qhat_lo
+        self.m = model
 
     def _evaluate(self, x, out, *args, **kwargs):
         f = to_fractions(x)
-        s, _, _, _ = self.m.predict(f, 1000.0)
-        lcb = s - self.qlo
+        mag = self.m.magpie(f)
+        _, lcb, _, _ = self.m.predict(f, 1000.0, mag)
         out["F"] = [-(lcb / 1000.0) / density(f), vec(f)]
-        out["G"] = [misfit_delta(f) - 0.066, self.m.doa_distance(f) - self.m.doa_threshold]
-
-
-def lower_offset(d, X):
-    """Typical distance from the hybrid point prediction to its conformal lower bound at
-    high temperature, estimated out-of-fold on the data (used inside the GA for speed;
-    exact conformal intervals are recomputed for the final Pareto set)."""
-    hot = np.where(d.T_C.values >= 800)[0]
-    y, p = d.YS_MPa.values, d.physics.values
-    from sklearn.model_selection import GroupKFold
-    offs = []
-    for a, b in GroupKFold(n_splits=5).split(X, groups=d.key.values):
-        pt = p[b] + sm.gbm().fit(X[a], y[a] - p[a]).predict(X[b])
-        lo, _ = sm.interval(X[a], y[a], p[a], X[b], p[b], d.key.values[a])
-        offs += list((pt - lo)[np.isin(b, hot)])
-    return float(np.median(offs))
+        out["G"] = [misfit_delta(f) - 0.066, self.m.doa_distance(f, mag) - self.m.doa_threshold]
 
 
 def main():
     d, X = sm.load()
     model = HybridPredictor(d, X)
-    q_lo = lower_offset(d, X)
-    print(f"DoA threshold {model.doa_threshold:.2f}; median lower-bound offset at >=800 C: {q_lo:.0f} MPa")
-    res = minimize(Problem(model, q_lo), NSGA2(pop_size=80, repair=BoundedRepair(), eliminate_duplicates=True),
+    print(f"DoA threshold {model.doa_threshold:.2f}; conformal margin {model.qhat:.0f} MPa", flush=True)
+    res = minimize(Problem(model), NSGA2(pop_size=80, repair=BoundedRepair(), eliminate_duplicates=True),
                    ("n_gen", 60), seed=1, verbose=False)
     rows = []
     for x in np.unique(np.round(res.X, 3), axis=0):
@@ -148,11 +148,9 @@ def main():
              "density": round(density(f), 2), "delta_pct": round(100 * misfit_delta(f), 2),
              "doa_dist": round(model.doa_distance(f), 2)}
         for T in (25.0, 1000.0, 1200.0):
-            xf = model.features(f, T)[None, :]
-            s, phys, _, _ = model.predict(f, T)
-            lo, hi = sm.interval(X, d.YS_MPa.values, d.physics.values, xf, np.array([phys]), d.key.values)
-            r.update({f"YS_{int(T)}C": round(s), f"lo_{int(T)}C": round(float(lo[0])),
-                      f"hi_{int(T)}C": round(float(hi[0])), f"physics_{int(T)}C": round(phys)})
+            s, lo, hi, phys = model.predict(f, T)
+            r.update({f"YS_{int(T)}C": round(s), f"lo_{int(T)}C": round(lo),
+                      f"hi_{int(T)}C": round(hi), f"physics_{int(T)}C": round(phys)})
         r["spec_lcb_1000C"] = round(r["lo_1000C"] / 1000 / r["density"], 4)
         rows.append(r)
     P = pd.DataFrame(rows).sort_values("VEC")
