@@ -13,8 +13,8 @@ Validation (training alloys only, holdout never touched until the end):
   grouped     5-fold GroupKFold by alloy (no alloy in train and test).
   system      5-fold GroupKFold by alloy system (element set), i.e. unseen chemistries.
   future      fit on all training alloys, score once on alloys first reported in 2019.
-Uncertainty: 90% prediction intervals from quantile gradient boosting on the hybrid
-residual; coverage is reported for each split.
+Uncertainty: 90% prediction intervals by conformalized quantile regression on the hybrid
+residual (calibrated inside the training folds only); coverage is reported for each split.
 
 Run (web venv): python scripts/strength_models.py [--inputs results/mlip_inputs.csv]
 Writes results/strength_models.csv and results/strength_predictions.csv
@@ -73,10 +73,25 @@ def fit_predict(name, Xtr, ytr, ptr, Xte, pte):
     raise ValueError(name)
 
 
-def interval(Xtr, ytr, ptr, Xte, pte):
-    lo = pte + gbm(quantile=0.05).fit(Xtr, ytr - ptr).predict(Xte)
-    hi = pte + gbm(quantile=0.95).fit(Xtr, ytr - ptr).predict(Xte)
-    return lo, hi
+def _quantile_band(Xtr, rtr, Xte):
+    return (gbm(quantile=0.05).fit(Xtr, rtr).predict(Xte),
+            gbm(quantile=0.95).fit(Xtr, rtr).predict(Xte))
+
+
+def interval(Xtr, ytr, ptr, Xte, pte, gtr, alpha=0.10):
+    """90% interval for the hybrid model by conformalized quantile regression
+    (Romano et al., NeurIPS 2019): quantile bands on the physics residual, widened by
+    the (1-alpha) quantile of out-of-fold conformity scores computed inside the
+    training set only (grouped by alloy)."""
+    r = ytr - ptr
+    scores = np.empty(len(r))
+    for a, b in GroupKFold(n_splits=5).split(Xtr, groups=gtr):
+        lo, hi = _quantile_band(Xtr[a], r[a], Xtr[b])
+        scores[b] = np.maximum(lo - r[b], r[b] - hi)
+    n = len(scores)
+    qhat = np.quantile(scores, min(1.0, np.ceil((n + 1) * (1 - alpha)) / n))
+    lo, hi = _quantile_band(Xtr, r, Xte)
+    return pte + lo - qhat, pte + hi + qhat
 
 
 def metrics(y, p):
@@ -100,14 +115,14 @@ def main():
             for m in models:
                 pr = fit_predict(m, X[itr], y[itr], p[itr], X[ite], p[ite])
                 preds += [{"split": split, "model": m, "row": int(i), "pred": float(v)} for i, v in zip(ite, pr)]
-            lo, hi = interval(X[itr], y[itr], p[itr], X[ite], p[ite])
+            lo, hi = interval(X[itr], y[itr], p[itr], X[ite], p[ite], d.key.values[itr])
             preds += [{"split": split, "model": "pi90", "row": int(i), "lo": float(l), "hi": float(h)}
                       for i, l, h in zip(ite, lo, hi)]
     itr, ite = np.where(tr)[0], np.where(~tr)[0]
     for m in models:
         pr = fit_predict(m, X[itr], y[itr], p[itr], X[ite], p[ite])
         preds += [{"split": "future", "model": m, "row": int(i), "pred": float(v)} for i, v in zip(ite, pr)]
-    lo, hi = interval(X[itr], y[itr], p[itr], X[ite], p[ite])
+    lo, hi = interval(X[itr], y[itr], p[itr], X[ite], p[ite], d.key.values[itr])
     preds += [{"split": "future", "model": "pi90", "row": int(i), "lo": float(l), "hi": float(h)}
               for i, l, h in zip(ite, lo, hi)]
 
