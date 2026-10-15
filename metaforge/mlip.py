@@ -23,6 +23,10 @@ def get_calculator(name):
         from mace.calculators import mace_mp
         return mace_mp(model="medium", default_dtype="float64", device="cpu")
     if name == "sevennet":
+        # e3nn (a SevenNet dependency) torch.loads a bundled constants file that contains
+        # Python `slice` objects; PyTorch >= 2.6 refuses them under weights_only=True.
+        import torch
+        torch.serialization.add_safe_globals([slice])
         from sevenn.calculator import SevenNetCalculator
         return SevenNetCalculator(model="7net-0", device="cpu")
     if name == "mattersim":
@@ -91,6 +95,47 @@ def cubic_elastic_constants(atoms, calc, delta=0.005, relax_ions=False, fmax=0.0
     c12 = np.mean([c[0, 1], c[0, 2], c[1, 2], c[1, 0], c[2, 0], c[2, 1]])
     c44 = np.mean([c[3, 3], c[4, 4], c[5, 5]])
     return float(c11), float(c12), float(c44)
+
+
+def cubic_elastic_constants_energy(atoms, calc, h=0.01, n=5, relax_ions=False, fmax=0.01, steps=300):
+    """Cubic C11, C12, C44 (GPa) from energy curvature, which needs no stresses.
+
+    Used instead of the stress route because CHGNet's stresses are not consistent with its
+    own energies for these cells (bulk modulus of bcc W: 125 GPa from stress vs 271 GPa
+    from E(V)); MACE agrees between the two routes. Strains (Voigt, small):
+      hydrostatic e*I              dE/V = (9/2) B e^2           B = (C11 + 2 C12)/3
+      tetragonal diag(e, -e, 0)    dE/V = (C11 - C12) e^2
+      shear e_xy = e_yx = e        dE/V = 2 C44 e^2   (averaged over xy, yz, xz)
+    """
+    cell0 = atoms.get_cell().array.copy()
+    v0 = atoms.get_volume()
+    strains = np.linspace(-h, h, n)
+
+    def curvature(make):
+        e = []
+        for x in strains:
+            at = atoms.copy(); at.calc = calc
+            at.set_cell(cell0 @ (np.eye(3) + make(x)), scale_atoms=True)
+            if relax_ions:
+                FIRE(at, logfile=None).run(fmax=fmax, steps=steps)
+            e.append(at.get_potential_energy())
+        return np.polyfit(strains, e, 2)[0] / v0 * EV_A3_TO_GPA  # d2E/de2 / 2 per volume, GPa
+
+    k = curvature(lambda x: x * np.eye(3)) * 2 / 9
+    cps = []
+    for i, j in ((0, 1), (1, 2), (0, 2)):
+        cps.append(curvature(lambda x, i=i, j=j: np.diag([x if q == i else (-x if q == j else 0) for q in range(3)])))
+    c11_minus_c12 = float(np.mean(cps))
+    c44s = []
+    for i, j in ((0, 1), (1, 2), (0, 2)):
+        def shear(x, i=i, j=j):
+            m = np.zeros((3, 3)); m[i, j] = m[j, i] = x
+            return m
+        c44s.append(curvature(shear) / 2)
+    c44 = float(np.mean(c44s))
+    c11 = k + 2.0 / 3.0 * c11_minus_c12
+    c12 = k - 1.0 / 3.0 * c11_minus_c12
+    return float(c11), float(c12), c44
 
 
 def sqs_to_atoms(structure):

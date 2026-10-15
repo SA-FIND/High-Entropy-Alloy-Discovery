@@ -6,6 +6,7 @@ Input routes compared on the single-phase BCC training alloys:
   <pot>_elements elemental rule of mixtures with bcc a, C_ij from each potential
                  (results/mlip_elements.csv). Alloys whose averaged C11 - C12 <= 0 (from
                  mechanically unstable bcc Ti/Zr/Hf) cannot be evaluated and are counted.
+  <pot>_volumes+lit_Cij  literature C_ij with the potential's bcc atomic volumes (misfits)
   <pot>_sqs      alloy-level C_ij and lattice parameter from relaxed SQS supercells
                  (results/mlip_alloys.csv), misfit volumes from the potential's elemental
                  bcc volumes; only for the alloys computed there.
@@ -62,6 +63,11 @@ def main():
                 continue
             p = np.array([predict(f, t, *rule_of_mixtures_inputs(f, table)) for f, t in zip(fr, d.T_C)])
             rows.append({"inputs": f"{pot}_elements", **score(y, p)})
+            # mixed: literature C_ij, potential atomic volumes (misfits). Lattice parameters are
+            # accurate to ~1.5% while shear constants are strongly softened (Deng et al. 2025).
+            mixed = {e: (table[e][0],) + tuple(ELEMENTS_LEE2021[e][1:]) for e in EL}
+            pm = np.array([predict(f, t, *rule_of_mixtures_inputs(f, mixed)) for f, t in zip(fr, d.T_C)])
+            rows.append({"inputs": f"{pot}_volumes+lit_Cij", **score(y, pm)})
             # same rows with the literature inputs, for a like-for-like comparison
             ok = np.isfinite(p)
             p_ref = np.array([predict(f, t, *rule_of_mixtures_inputs(f)) for f, t in zip(fr, d.T_C)])
