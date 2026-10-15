@@ -16,7 +16,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from metaforge.mlip import bcc_cell, cubic_elastic_constants, eos_lattice_parameter, get_calculator  # noqa: E402
+from metaforge.mlip import bcc_cell, cubic_elastic_constants_energy, eos_lattice_parameter, get_calculator  # noqa: E402
 from metaforge.strength_edge import ELEMENTS_LEE2021  # noqa: E402
 
 ELEMENTS = ["Ti", "Zr", "Hf", "V", "Nb", "Ta", "Cr", "Mo", "W"]
@@ -39,7 +39,7 @@ def main(potentials):
             v_ref, c11r, c12r, c44r = ELEMENTS_LEE2021[el]
             a_ref = (2 * v_ref) ** (1 / 3)
             a = eos_lattice_parameter(el, calc, a_ref)
-            c11, c12, c44 = cubic_elastic_constants(bcc_cell(el, a), calc)
+            c11, c12, c44 = cubic_elastic_constants_energy(bcc_cell(el, a), calc)
             row = {"potential": pot, "element": el, "a": round(a, 4), "a_ref": round(a_ref, 4),
                    "V": round(a ** 3 / 2, 3), "V_ref": v_ref,
                    "C11": round(c11, 1), "C12": round(c12, 1), "C44": round(c44, 1),
