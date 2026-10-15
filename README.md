@@ -22,7 +22,7 @@
 ## Core Features
 
 - **Combinatorial Engine:** Generates candidate alloy compositions and filters them using established physical metallurgy rules (e.g., lattice strain limits δ < 6.6% and specific VEC phase thresholds).
-- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict continuum density and dislocation-calibrated yield strength ($\sigma_y = \sigma_0 + M \cdot \tau_{ss}$).
+- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict density; yield strength is predicted by a model trained on measured room-temperature compression data (MPEA dataset). The older analytical strength proxy ($\sigma_y = \sigma_0 + M \cdot \tau_{ss}$, ad hoc constants) is kept only as a legacy baseline.
 - **Inverse Design:** A custom genetic algorithm evolves alloy compositions over multiple generations to maximize specific strength (strength-to-weight ratio).
 - **Structure Relaxation:** Optimizes SQS supercell blueprints (54-atom BCC / 48-atom FCC) using the CHGNet graph neural network interatomic potential, with post-relaxation space group verification via `SpacegroupAnalyzer`.
 - **Web Interface:** A lightweight Flask and React interface with a clean, dark-themed UI for real-time model inference.
@@ -31,7 +31,7 @@
 
 ## Hierarchical Multi-Fidelity Discovery Framework
 
-MetaForge employs a **three-tier multi-fidelity screening architecture** designed to balance high-throughput exploratory bandwidth with atomistic and quantum thermodynamic accuracy:
+MetaForge employs a **three-tier multi-fidelity screening architecture** designed to balance high-throughput screening with atomistic checks. Tier 3 is a protocol, not yet executed:
 
 ```mermaid
 graph TD
@@ -39,7 +39,7 @@ graph TD
         A1["• Combinatorial phase filtering: Zhang δ ≤ 6.6%, Guo VEC thresholds"]
         A2["• Miedema mixing enthalpy: -15 ≤ ΔH_mix ≤ +5 kJ/mol, Ω ≥ 1.1"]
         A3["• 132 Magpie feature descriptors + Random Forest surrogate regressors"]
-        A4["• Dislocation-calibrated Yield Strength: σ_y = σ_0 + M·τ_ss"]
+        A4["• Yield strength from measured-data model (MPEA); legacy analytical proxy as baseline"]
     end
 
     subgraph T2["<b>TIER 2: Atomistic GNN Relaxation & SRO Optimization</b>"]
@@ -49,12 +49,12 @@ graph TD
         B4["• Thermodynamic Formation Energy: ΔE_f relative to pure elements"]
     end
 
-    subgraph T3["<b>TIER 3: First-Principles DFT & Experimental Validation</b>"]
-        C1["• High-throughput ab-initio DFT (VASP/QE) for ground-truth C_ij"]
-        C2["• Vacuum arc remelting & XRD/SEM/Vickers hardness synthesis roadmap"]
+    subgraph T3["<b>TIER 3 (planned, not yet run): DFT & Experimental Validation</b>"]
+        C1["• Proposed: DFT (VASP/QE) elastic constants for selected candidates"]
+        C2["• Proposed: arc melting, XRD/SEM, hardness (via collaboration)"]
     end
 
-    T1 -->|Top Pareto Candidates| T2
+    T1 -->|Top GA candidates| T2
     T2 -->|Optimized Blueprints| T3
 ```
 
@@ -200,7 +200,8 @@ MetaForge/
 ├── requirements.txt             # Primary environment dependencies
 ├── render.yaml                  # Cloud deployment configuration
 ├── README.md                    # Project documentation
-├── RESEARCH_PROPOSAL.md         # Formal multi-fidelity ICME research proposal
+├── docs/PUBLICATION_PLAN.md     # Current plan (refractory scope, validation)
+├── archive/                     # Retired material (old proposal, withdrawn candidates)
 └── LICENSE                      # MIT Open-Source License
 ```
 
@@ -236,11 +237,14 @@ If you use MetaForge in your research, academic proposals, or materials discover
    - Guo, S., & Liu, C. T. *Phase stability in high entropy alloys: Formation of solid-solution phase or amorphous phase.* **Prog. Nat. Sci.: Mater. Int.** 21 (2011) 433–446.
    - Fieser, D., Dewanjee, U., & Hu, A. *HEA-Bench: An AI-Agent-Optimized Calculator of High-Entropy Alloy and Oxide Descriptors and Phase-Prediction Rules.* **Materials** 19(14) (2026) 3075. [DOI: 10.3390/ma19143075](https://doi.org/10.3390/ma19143075).
 2. **Dislocation Mechanics & Solid-Solution Strengthening:**
-   - Varvenne, C., Luque, A., & Curtin, W. A. *Theory of strengthening in dilute and concentrated random solid solutions.* **Acta Materialia** 118 (2016) 164–176.
-   - Toda-Caraballo, I., & Rivera-Díaz-del-Castillo, P. E. J. *A general formulation for solid solution hardening in high entropy alloys.* **Acta Materialia** 85 (2015) 14–23.
-3. **Graph Neural Network Interatomic Potentials:**
-   - Deng, B., Zhong, P., Jun, K., et al. *CHGNet: A pretrained universal neural network potential for charge-informed atomistic modeling.* **Nature Machine Intelligence** 5 (2023) 1031–1041.
-4. **Materials Informatics Core:**
+   - Varvenne, C., Luque, A., & Curtin, W. A. *Theory of strengthening in fcc high entropy alloys.* **Acta Materialia** 118 (2016) 164–176.
+   - Maresca, F., & Curtin, W. A. *Mechanistic origin of high strength in refractory BCC high entropy alloys up to 1900K.* **Acta Materialia** 182 (2020) 235–249. [DOI: 10.1016/j.actamat.2019.10.015](https://doi.org/10.1016/j.actamat.2019.10.015).
+   - Toda-Caraballo, I., & Rivera-Díaz-del-Castillo, P. E. J. *Modelling solid solution hardening in high entropy alloys.* **Acta Materialia** 85 (2015) 14–23.
+3. **Data:**
+   - Borg, C. K. H., et al. *Expanded dataset of mechanical properties and observed phases of multi-principal element alloys.* **Scientific Data** 7 (2020) 430. [DOI: 10.1038/s41597-020-00768-9](https://doi.org/10.1038/s41597-020-00768-9).
+4. **Graph Neural Network Interatomic Potentials:**
+   - Deng, B., Zhong, P., Jun, K., et al. *CHGNet as a pretrained universal neural network potential for charge-informed atomistic modelling.* **Nature Machine Intelligence** 5 (2023) 1031–1041.
+5. **Materials Informatics Core:**
    - Jain, A., Ong, S. P., Hautier, G., et al. *Commentary: The Materials Project: A materials genome approach to accelerating materials innovation.* **APL Materials** 1 (2013) 011002.
    - Ward, L., Dunn, A., Faghaninia, A., et al. *Matminer: An open source toolkit for materials data mining.* **Comput. Mater. Sci.** 152 (2018) 60–69.
    - Ong, S. P., Richards, W. D., Jain, A., et al. *Python Materials Genomics (pymatgen): A robust, open-source python library for materials analysis.* **Comput. Mater. Sci.** 68 (2013) 314–319.
