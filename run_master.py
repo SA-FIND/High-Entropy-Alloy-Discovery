@@ -34,6 +34,8 @@ from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from matminer.featurizers.composition import ElementProperty
 from pymatgen.core import Composition
+from metaforge.composition import (crystal_type, project_to_bounded_simplex,
+                                   round_on_bounded_simplex, vegard_lattice_parameter)
 
 # HEA categories with constituent elements and VEC values
 alloy_categories = {
@@ -230,6 +232,17 @@ def compute_yield_strength(comp, master_props_cat, crystal_type="BCC"):
     return float(round(sigma_y, 3))
 
 
+def template_for(comp):
+    """Supercell template for one composition: BCC (54 atoms) or FCC (48 atoms) by the
+    VEC rule, with the Vegard (rule-of-mixtures) lattice parameter. The old fixed
+    per-category templates made 'volume change on relaxation' meaningless."""
+    kind = crystal_type(comp)
+    t = dict(structure_templates["Refractory" if kind == "BCC" else "Corrosion"])
+    t["type"] = kind
+    t["lattice_param"] = vegard_lattice_parameter(comp, kind)
+    return t
+
+
 def build_sqs_structure(comp, template, elements, seed=42, max_mc_steps=1000):
     """Builds an optimized Special Quasirandom Structure (SQS) supercell by
     minimizing Warren-Cowley Short-Range Order (SRO) parameters across 1st and
@@ -388,7 +401,7 @@ for cat, elements_dict in alloy_categories.items():
         rom_density = sum(frac * master_props[cat][el]['density'] for el, frac in comp.items())
         
         # Physical Yield Strength (Taylor factor dislocation model: sigma_y = sigma_0 + M * tau_ss)
-        yield_strength = compute_yield_strength(comp, master_props[cat], structure_templates[cat]["type"])
+        yield_strength = compute_yield_strength(comp, master_props[cat], crystal_type(comp))
         
         # Miedema thermodynamic solid solution parameters
         h_mix, s_mix, tm, omega = calc_miedema_thermo(comp)
@@ -515,9 +528,6 @@ for cat, elements_dict in alloy_categories.items():
     sampled_features = []
     n_label_fallbacks = 0
     
-    template = structure_templates[cat]
-    total_atoms = len(template["basis_species"]) * np.prod(template["supercell"])
-    
     for idx, row in df_sample.iterrows():
         comp_dict = {el: row[el] for el in elements}
         comp_obj = Composition(comp_dict)
@@ -525,10 +535,10 @@ for cat, elements_dict in alloy_categories.items():
         
         if CHGNET_AVAILABLE:
             try:
-                struct = build_sqs_structure(comp_dict, template, elements, seed=42, max_mc_steps=150)
+                struct = build_sqs_structure(comp_dict, template_for(comp_dict), elements, seed=42, max_mc_steps=150)
                 relax_result = relaxer.relax(struct, steps=50)
                 final_energy = relax_result["trajectory"].energies[-1]
-                energy_per_atom = final_energy / total_atoms
+                energy_per_atom = final_energy / len(struct)
             except Exception as e:
                 n_label_fallbacks += 1
                 energy_per_atom = sum(comp_dict[el] * elemental_ref_energies.get(el, -7.0) for el in elements)
@@ -579,9 +589,8 @@ for cat, elements_dict in alloy_categories.items():
     # Generating valid HEA composition strictly adhering to 5% <= c_i <= 35%
     def generate_random_alloy():
         raw = np.random.dirichlet(np.ones(len(elements)), size=1)[0]
-        clipped = np.clip(raw, 0.05, 0.35)
-        normed = clipped / np.sum(clipped)
-        return {elements[i]: round(float(normed[i]), 3) for i in range(len(elements))}
+        x = round_on_bounded_simplex(project_to_bounded_simplex(raw))
+        return {elements[i]: float(x[i]) for i in range(len(elements))}
 
     # Fitness: specific yield strength minus a penalty on FORMATION energy.
     # The penalty must use formation energy (E - sum x_i E_ref,i). The old code used
@@ -640,9 +649,8 @@ for cat, elements_dict in alloy_categories.items():
                 child[el2] -= shift
             # Enforce 5% to 35% HEA bounds
             raw_vals = np.array([child[el] for el in elements])
-            clipped = np.clip(raw_vals, 0.05, 0.35)
-            normed = clipped / np.sum(clipped)
-            child = {elements[i]: round(float(normed[i]), 3) for i in range(len(elements))}
+            x = round_on_bounded_simplex(project_to_bounded_simplex(raw_vals))
+            child = {elements[i]: float(x[i]) for i in range(len(elements))}
             next_gen.append(child)
         population = next_gen
         
@@ -655,7 +663,7 @@ for cat, elements_dict in alloy_categories.items():
     best_alloys_discovered[cat] = best_alloy_ever
     
     # SQS blueprint generation
-    template = structure_templates[cat]
+    template = template_for(best_alloy_ever)
     total_atoms = len(template["basis_species"]) * np.prod(template["supercell"])
     
     print(f"\n  [CIF] Generating {total_atoms}-atom {template['type']} SQS blueprint for top candidate...")
