@@ -5,12 +5,18 @@ Run (web venv): python scripts/make_figures.py
 Writes figures/fig*.png (300 dpi)
 """
 import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from pymatgen.core import Element  # noqa: E402
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from metaforge.composition import VEC  # noqa: E402
+from metaforge.strength_edge import ELEMENTS_LEE2021  # noqa: E402
 
 OUT = "figures"
 plt.rcParams.update({"font.size": 9, "font.family": "DejaVu Sans", "axes.spines.top": False,
@@ -104,11 +110,29 @@ def fig_pareto():
     if not os.path.exists(path):
         return
     p = pd.read_csv(path)
-    fig, ax = plt.subplots(figsize=(4.2, 3))
-    sc = ax.scatter(p.VEC, p.spec_lcb_1000C, c=p.density, cmap="plasma", s=18)
-    ax.axvspan(p.VEC.min() - 0.1, 4.5, color="#2ca02c", alpha=0.08, lw=0)
+    fig, ax = plt.subplots(figsize=(4.6, 3.1))
+    for base, mk, lab in (("results/design_pareto_no_phase.csv", "o", "composition domain only"),
+                          ("results/design_pareto_phase_only.csv", "s", "+ phase constraint")):
+        if os.path.exists(base):
+            b = pd.read_csv(base)
+            ax.scatter(b.VEC, b.spec_lcb_1000C.clip(lower=0), s=12, marker=mk, facecolors="none",
+                       edgecolors="#999", lw=0.6, label=lab)
+    # negative lower bounds mean the 90% interval does not exclude zero strength: shown at 0
+    sc = ax.scatter(p.VEC, p.spec_lcb_1000C.clip(lower=0), c=p.density, cmap="plasma", s=18,
+                    label="+ high-temperature domain (final)")
+    # measured single-phase BCC alloys tested at 1000 C, for reference (point values, not bounds)
+    d = pd.read_csv("data/processed/rhea_strength.csv")
+    d = d[d.physics_domain & (d.T_C == 1000)]
+    el = ["Ti", "Zr", "Hf", "V", "Nb", "Ta", "Cr", "Mo", "W"]
+    vec =d[el].values @ np.array([VEC[e] for e in el])
+    mass = d[el].values @ np.array([Element(e).atomic_mass for e in el])
+    vol = d[el].values @ np.array([ELEMENTS_LEE2021[e][0] for e in el])
+    rho = mass / vol * 1.66053906660
+    ax.scatter(vec, d.YS_MPa / 1000 / rho, marker="x", c="k", s=16, lw=0.8, label="measured (1000 °C)")
+    ax.axvspan(min(p.VEC.min(), vec.min()) - 0.05, 4.4, color="#2ca02c", alpha=0.08, lw=0)
     ax.set_xlabel("VEC (ductility proxy; ≤ 4.4 ductile, Sheikh 2016)")
-    ax.set_ylabel("Lower 90% bound, σy(1000 °C)/ρ\n(GPa cm³ g⁻¹)")
+    ax.set_ylabel("σy(1000 °C)/ρ (GPa cm³ g⁻¹)\ndesigns: lower 90% bound")
+    ax.legend(frameon=False, fontsize=6.5, loc="upper left")
     fig.colorbar(sc, label="Density (g cm⁻³)")
     fig.savefig(f"{OUT}/fig7_pareto.png"); plt.close(fig)
 
