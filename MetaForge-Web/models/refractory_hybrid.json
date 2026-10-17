@@ -1,0 +1,8 @@
+{
+  "n_alloys": 72,
+  "n_measurements": 277,
+  "conformal_margin_MPa": 204.4,
+  "doa_threshold": 10.03,
+  "ys_max_hot_MPa": 927.0,
+  "validation": "grouped-by-alloy CV R2 0.666, by-system 0.638, 2019 holdout 0.649 (results/strength_models.csv)"
+}
