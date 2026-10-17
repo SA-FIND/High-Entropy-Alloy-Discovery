@@ -4,11 +4,19 @@ Solomon Ahedor
 
 Department of Materials Engineering, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana. Correspondence: ahedorsolomon@gmail.com
 
-<!-- Draft v2, 2026-10-17. Every number comes from committed files in results/. Remaining for the author: AI-use statement, co-authorship decision, abstract to be cut to the journal's word limit. -->
+<!-- Draft v2, 2026-10-17. Every number comes from committed files in results/. Remaining for the author: confirm the AI declaration and CRediT roles; decide co-authorship. -->
+
+## Highlights
+
+- Edge-dislocation theory alone explains 45% of the variance in RHEA yield strength
+- Learning the theory's residual beats theory or ML alone on unseen alloy systems
+- Universal ML potentials give good lattice parameters but soft shear constants
+- A data-derived pairwise phase rule removes Laves-prone Zr-W design candidates
+- Ti-Zr-V softening above 600 C marks where the hybrid model cannot be trusted
 
 ## Abstract
 
-Refractory multi-principal element alloys (RMPEAs) retain high strength at temperatures where nickel superalloys soften, but their composition space is too large to explore experimentally. Parameter-free theories of solid-solution strengthening and machine-learning (ML) models trained on measured data each offer a route to screening, yet their accuracy outside the alloys used to build them is rarely tested. We compiled 277 yield-strength measurements from 25 to 1600 °C on 72 single-phase body-centred cubic (BCC) alloys of Ti, Zr, Hf, V, Nb, Ta, Cr, Mo and W from the open MPEA dataset, and compared three predictors under validation designed for discovery: cross-validation grouped by alloy, by alloy system (unseen chemistries), and a temporal holdout of 14 alloys first reported in 2019. The reduced edge-dislocation theory of Maresca and Curtin, with no fitted parameters, explains 45% of the variance (R² = 0.45, mean absolute error 261 MPa) but under-predicts strength systematically, most at room temperature. A gradient-boosted model trained only on composition descriptors reaches R² = 0.51. A hybrid that uses the theory as a baseline and learns only its residual is best on every split: R² = 0.67 for unseen alloys, 0.64 for unseen alloy systems and 0.65 (MAE 175 MPa) for the 2019 alloys, where the theory alone gives 0.10. Conformalized quantile regression gives 90% prediction intervals with 84–88% empirical coverage. We then asked whether universal machine-learning interatomic potentials (CHGNet, MACE-MP-0, SevenNet-0) can replace the experimental elemental inputs of the theory. All three reproduce bcc lattice parameters within 1.7%, but underestimate shear elastic constants of the group V–VI elements by factors of 1.5 to 60; used as inputs, they degrade the strength predictions (R² from 0.45 to between −0.6 and −4.0). The softening persists in alloy supercells (R² = −1.05 with MACE-MP-0 alloy constants). Their atomic volumes alone are usable but do not improve on experimental values. Finally, a multi-objective search traded the lower 90% bound of specific strength at 1000 °C against valence electron concentration, a ductility proxy. Without a phase constraint, every Pareto alloy combined Zr with W, a Laves-forming pair never reported in a single-phase alloy. A data-derived pairwise phase rule (82% of single-phase and 77% of multiphase alloys correctly classified in leave-one-out tests) moves the front to Ti–Zr–Hf–V–Mo alloys predicted to match the best measured specific strength at 1000 °C at 24% lower density. Because Ti–Zr–V alloys soften abruptly above 600 °C, a behaviour the model over-predicts six- to seven-fold when such alloys are unseen, a high-temperature test of one candidate is the most informative next experiment. All data, code and models are openly available.
+Parameter-free strength theories and machine-learning (ML) models are both used to screen refractory multi-principal element alloys, but their accuracy on alloys unlike those used to build them is rarely tested. Using 277 yield-strength measurements (25–1600 °C) on 72 single-phase BCC alloys of Ti, Zr, Hf, V, Nb, Ta, Cr, Mo and W, we compared predictors under cross-validation grouped by alloy and by alloy system, and on a temporal holdout of alloys first reported in 2019. The reduced edge-dislocation theory of Maresca and Curtin, without fitting, gives R² = 0.45 overall but only 0.10 on the later alloys. A hybrid that learns only the theory's residual from composition descriptors is best on every split (R² = 0.67, 0.64 and 0.65), and its conformal 90% intervals cover 84–88% of measurements. Universal interatomic potentials (CHGNet, MACE-MP-0, SevenNet-0) reproduce lattice parameters within 1.7% but underestimate shear constants by factors of 1.5–60 for elements and 1.3–2.6 for alloy supercells; used as inputs to the theory, they reduce R² below zero. In a constrained multi-objective search, a data-derived pairwise phase rule (82% of single-phase and 77% of multiphase alloys classified correctly in leave-one-out tests) removes the Zr–W combinations that an unconstrained search prefers, leaving Ti–Zr–Hf–V–Mo candidates predicted to match the best measured specific strength at 1000 °C at 24% lower density. Because Ti–Zr–V alloys soften abruptly above 600 °C, a high-temperature test of one candidate is the most informative next experiment.
 
 **Keywords:** refractory high-entropy alloys; solid-solution strengthening; edge dislocations; machine learning; uncertainty quantification; universal interatomic potentials
 
@@ -54,6 +62,10 @@ CHGNet 0.3.0 [18], MACE-MP-0 "medium" [19] and SevenNet-0 [20] were used through
 The search space is Ti–Zr–Hf–V–Nb–Ta–Cr–Mo–W with four to six elements, each between 5 and 35 at.%, enforced exactly by Euclidean projection onto the bounded simplex. NSGA-II [27] (pymoo [28]; population 80, 60 generations) maximised the lower 90% conformal bound of the hybrid yield strength at 1000 °C divided by rule-of-mixtures density, and minimised valence electron concentration (VEC), a ductility proxy: Sheikh et al. found ductile refractory MPEAs at VEC ≤ 4.4 and brittle ones at VEC ≥ 4.6 [29]. Constraints were a volume misfit δ = (Σ c_n ΔV_n²)^(1/2)/(3V̄) ≤ 6.6% and a domain-of-applicability limit: the standardised Magpie distance to the nearest measured alloy could not exceed the 95th percentile of nearest-neighbour distances among the measured alloys. For design, the hybrid model was refitted on all 72 alloys after validation.
 
 The strength model assumes a single BCC phase, so the search must also stay where that assumption is plausible. Simple descriptors do not predict phase reliably in these data: for the 97 refractory alloys of the nine elements with a reported microstructure (67 single-phase BCC, 30 multiphase, counting an alloy as single-phase only if every report of it says so), logistic regression on VEC, δ and a Laves-pair index reached a cross-validated ROC AUC of only 0.56–0.63, as reported phases depend on processing. We therefore used a transparent pairwise rule: a candidate may not contain any element pair at a concentration product c_i c_j larger than in some alloy reported as single-phase BCC. Pairs never observed together in a single-phase alloy (Zr–Cr, Zr–W, Hf–Cr, Hf–W, V–Cr, Ta–Cr and Cr–W) are therefore excluded. In leave-one-alloy-out validation the rule accepted 55 of the 67 single-phase alloys (82%) and rejected 23 of the 30 multiphase ones (77%). It is a data-domain constraint rather than a thermodynamic model, and it cannot detect phase separation in chemistries that are within the caps, such as HfNbTaTiZr, reported in the dataset both as single-phase BCC and as BCC + HCP. A third constraint concerns temperature. Ti–Zr–V alloys soften abruptly above about 600 °C (NbTiVZr: 834 MPa at 600 °C, 187 MPa at 800 °C and 58 MPa at 1000 °C), presumably as diffusion-controlled mechanisms that the glide-based theory does not describe take over. When these alloys are held out by alloy system, the hybrid over-predicts their 1000 °C strength six- to seven-fold (339–496 MPa). The temperature at which a chemistry softens can only be learned from alloys tested near it, and only 20 of the 72 alloys have data at or above 900 °C. We therefore required the standardised Magpie distance from a candidate to the nearest alloy tested at ≥ 900 °C to satisfy the same 95th-percentile limit. This constraint is a coverage argument; it could not be validated retrospectively, because almost all high-temperature test rows belong to the hot-tested alloys themselves. Finally, candidates whose predicted strength at 1000 °C exceeds the highest strength measured at or above 900 °C in the dataset (927 MPa) are flagged as extrapolating in the target as well as in composition.
+
+### 2.7 Software and use of AI assistance
+
+All analyses use Python with pymatgen, matminer, scikit-learn [23], pymoo [28] and ASE [25]. The analysis code was written with the help of an AI coding assistant (Claude, Anthropic); the author specified, reviewed and tested all code (17 unit tests, including reproduction of published values of the edge theory), and every number and figure in this paper is regenerated by scripts in the public repository.
 
 ## 3. Results
 
@@ -131,13 +143,37 @@ These high-strength candidates carry the risk identified in Section 2.6: 56 of t
 3. Universal interatomic potentials (CHGNet, MACE-MP-0, SevenNet-0) reproduce bcc lattice parameters within 1.7% but underestimate shear elastic constants by factors of 1.5–60 for elements and 1.3–2.6 for alloys. Used as inputs, they make strength predictions much worse than experimental inputs; only their atomic volumes are usable.
 4. In design, each guard against extrapolation changes the answer. Without a phase rule, all candidates combined Laves-forming pairs never reported in single-phase alloys; with it, the predicted gains shrink to a 24% density reduction at the specific strength of the best measured alloys. These Ti–Zr–Hf–V–Mo alloys lie in a chemistry known to soften above 600 °C, and testing one of them at temperature is the most informative next experiment.
 
+## Figure captions
+
+Fig. 1. Dataset. (a) Yield strength against test temperature for the 58 training alloys (217 tests) and the 14 alloys first reported in 2019 (60 tests). (b) Number of alloys containing each element.
+
+Fig. 2. CHGNet relaxation of 54-atom SQS supercells: deviation of the lattice parameter from experiment and of the volume from Vegard's law (mean and standard deviation over three SQS realisations).
+
+Fig. 3. Predicted against measured yield strength for unseen alloys (cross-validation grouped by alloy): (a) edge theory without fitting, (b) ML model, (c) hybrid. Colour: test temperature.
+
+Fig. 4. (a) R² and (b) mean absolute error of the four predictors on the three validation splits.
+
+Fig. 5. Mean prediction error against test temperature for the edge theory and the hybrid (cross-validation grouped by alloy); bars: one standard deviation.
+
+Fig. 6. Elemental bcc properties from three universal interatomic potentials against reference values [9]: (a) lattice-parameter error, (b) error in C′ = (C11 − C12)/2.
+
+Fig. 7. Pareto fronts of the design search: lower 90% bound of specific yield strength at 1000 °C against VEC, for the three constraint sets of Table 3. Negative lower bounds are shown at zero. Crosses: measured single-phase alloys at 1000 °C (point values, not bounds). Shaded: VEC ≤ 4.4, the ductile range of [29].
+
 ## Data and code availability
 
 All data, code, trained models and the scripts that generate every number and figure are available at https://github.com/SA-FIND/High-Entropy-Alloy-Discovery (MIT licence). The processed dataset is derived from the MPEA dataset [11] under its Apache 2.0 licence.
 
-## Use of AI tools
+## CRediT authorship contribution statement
 
-[State plainly which AI assistance was used for code and text, and that all results were checked by the author, as the target journal requires.]
+Solomon Ahedor: Conceptualization, Methodology, Software, Formal analysis, Data curation, Visualization, Writing – original draft, Writing – review & editing.
+
+## Declaration of competing interest
+
+The author declares no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+## Declaration of generative AI and AI-assisted technologies in the writing process
+
+During the preparation of this work the author used Claude (Anthropic) to draft and edit text and to check the manuscript's numbers against the analysis outputs. After using this tool, the author reviewed and edited the content as needed and takes full responsibility for the content of the publication.
 
 ## References
 
