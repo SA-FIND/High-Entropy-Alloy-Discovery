@@ -1,0 +1,18 @@
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+Using Materials Project MACE for MACECalculator with C:\Users\USER\.cache\mace/20231203mace128L1_epoch199model
+Using float64 for MACECalculator, which is slower but more accurate. Recommended for geometry optimization.
+{'potential': 'mace', 'key': 'Mo0.250 Nb0.250 Ta0.250 W0.250', 'a': np.float64(3.2465), 'C11': 274.5, 'C12': 195.9, 'C44': 55.0, 'relax_converged': True, 'seconds': 1086}
+{'potential': 'mace', 'key': 'Mo0.200 Nb0.200 Ta0.200 V0.200 W0.200', 'a': np.float64(3.2071), 'C11': 270.9, 'C12': 197.1, 'C44': 50.0, 'relax_converged': True, 'seconds': 1125}
+{'potential': 'mace', 'key': 'Hf0.200 Nb0.200 Ta0.200 Ti0.200 Zr0.200', 'a': np.float64(3.406), 'C11': 136.9, 'C12': 94.5, 'C44': 32.2, 'relax_converged': True, 'seconds': 881}
+{'potential': 'mace', 'key': 'Hf0.200 Mo0.200 Nb0.200 Ti0.200 Zr0.200', 'a': np.float64(3.374), 'C11': 144.8, 'C12': 106.0, 'C44': 30.3, 'relax_converged': True, 'seconds': 917}
+{'potential': 'mace', 'key': 'Hf0.167 Mo0.167 Nb0.167 Ta0.167 Ti0.167 Zr0.167', 'a': np.float64(3.3638), 'C11': 157.4, 'C12': 114.0, 'C44': 32.7, 'relax_converged': True, 'seconds': 783}
+{'potential': 'mace', 'key': 'Hf0.200 Mo0.200 Ta0.200 Ti0.200 Zr0.200', 'a': np.float64(3.3745), 'C11': 150.3, 'C12': 111.8, 'C44': 32.6, 'relax_converged': True, 'seconds': 815}
+{'potential': 'mace', 'key': 'Mo0.200 Nb0.200 Ta0.200 Ti0.200 W0.200', 'a': np.float64(3.2396), 'C11': 243.3, 'C12': 170.4, 'C44': 48.6, 'relax_converged': True, 'seconds': 765}
+{'potential': 'mace', 'key': 'Mo0.167 Nb0.167 Ta0.167 Ti0.167 V0.167 W0.167', 'a': np.float64(3.2025), 'C11': 241.1, 'C12': 170.2, 'C44': 43.9, 'relax_converged': True, 'seconds': 825}
+{'potential': 'mace', 'key': 'Hf0.250 Mo0.125 Nb0.250 Ti0.250 V0.125', 'a': np.float64(3.3034), 'C11': 153.2, 'C12': 108.4, 'C44': 34.5, 'relax_converged': True, 'seconds': 790}
+{'potential': 'mace', 'key': 'Nb0.250 Ta0.250 Ti0.250 V0.250', 'a': np.float64(3.2248), 'C11': 197.3, 'C12': 132.4, 'C44': 37.1, 'relax_converged': True, 'seconds': 624}
+{'potential': 'mace', 'key': 'Hf0.200 Mo0.200 Nb0.200 Ta0.200 Ti0.200', 'a': np.float64(3.3186), 'C11': 178.5, 'C12': 126.4, 'C44': 35.8, 'relax_converged': True, 'seconds': 719}
+{'potential': 'mace', 'key': 'Hf0.200 Mo0.200 Nb0.200 Ta0.200 Zr0.200', 'a': np.float64(3.3827), 'C11': 167.6, 'C12': 122.6, 'C44': 34.9, 'relax_converged': True, 'seconds': 799}
+{'potential': 'mace', 'key': 'Nb0.250 Ti0.250 V0.250 Zr0.250', 'a': np.float64(3.3012), 'C11': 144.3, 'C12': 100.2, 'C44': 30.6, 'relax_converged': True, 'seconds': 812}
+{'potential': 'mace', 'key': 'Hf0.250 Nb0.250 Ti0.250 Zr0.250', 'a': np.float64(3.4336), 'C11': 120.9, 'C12': 84.9, 'C44': 29.8, 'relax_converged': True, 'seconds': 551}
+{'potential': 'mace', 'key': 'Hf0.200 Nb0.200 Ti0.200 V0.200 Zr0.200', 'a': np.float64(3.3513), 'C11': 128.0, 'C12': 91.6, 'C44': 32.5, 'relax_converged': True, 'seconds': 809}

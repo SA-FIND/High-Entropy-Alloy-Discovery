@@ -1,0 +1,36 @@
+CHGNet v0.3.0 initialized with 412,525 parameters
+CHGNet will run on cpu
+chgnet {'potential': 'chgnet', 'element': 'Ti', 'a': 3.2712, 'a_ref': 3.264, 'V': 17.502, 'V_ref': 17.387, 'C11': 64.2, 'C12': 73.6, 'C44': 15.9, 'C11_ref': 134.0, 'C12_ref': 110.0, 'C44_ref': 36.0}
+chgnet {'potential': 'chgnet', 'element': 'Zr', 'a': 3.5969, 'a_ref': 3.5841, 'V': 23.268, 'V_ref': 23.02, 'C11': 92.4, 'C12': 83.3, 'C44': 15.3, 'C11_ref': 104.0, 'C12_ref': 93.0, 'C44_ref': 38.0}
+chgnet {'potential': 'chgnet', 'element': 'Hf', 'a': 3.5387, 'a_ref': 3.5584, 'V': 22.157, 'V_ref': 22.528, 'C11': 115.7, 'C12': 98.8, 'C44': 27.8, 'C11_ref': 131.0, 'C12_ref': 103.0, 'C44_ref': 45.0}
+chgnet {'potential': 'chgnet', 'element': 'V', 'a': 2.998, 'a_ref': 3.038, 'V': 13.472, 'V_ref': 14.02, 'C11': 240.4, 'C12': 146.2, 'C44': 52.6, 'C11_ref': 232.4, 'C12_ref': 119.36, 'C44_ref': 45.95}
+chgnet {'potential': 'chgnet', 'element': 'Nb', 'a': 3.3334, 'a_ref': 3.299, 'V': 18.519, 'V_ref': 17.952, 'C11': 160.9, 'C12': 116.7, 'C44': 3.2, 'C11_ref': 252.7, 'C12_ref': 133.2, 'C44_ref': 30.97}
+chgnet {'potential': 'chgnet', 'element': 'Ta', 'a': 3.3294, 'a_ref': 3.301, 'V': 18.453, 'V_ref': 17.985, 'C11': 215.3, 'C12': 174.1, 'C44': 26.2, 'C11_ref': 266.32, 'C12_ref': 158.16, 'C44_ref': 87.36}
+chgnet {'potential': 'chgnet', 'element': 'Cr', 'a': 2.8691, 'a_ref': 2.91, 'V': 11.808, 'V_ref': 12.321, 'C11': 255.9, 'C12': 153.6, 'C44': -2.1, 'C11_ref': 339.8, 'C12_ref': 58.6, 'C44_ref': 99.0}
+chgnet {'potential': 'chgnet', 'element': 'Mo', 'a': 3.1751, 'a_ref': 3.143, 'V': 16.005, 'V_ref': 15.524, 'C11': 352.0, 'C12': 235.6, 'C44': 40.9, 'C11_ref': 450.02, 'C12_ref': 172.92, 'C44_ref': 125.03}
+chgnet {'potential': 'chgnet', 'element': 'W', 'a': 3.1924, 'a_ref': 3.162, 'V': 16.268, 'V_ref': 15.807, 'C11': 320.9, 'C12': 246.1, 'C44': 48.7, 'C11_ref': 532.55, 'C12_ref': 204.95, 'C44_ref': 163.13}
+[chgnet] 73 s
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+Using Materials Project MACE for MACECalculator with C:\Users\USER\.cache\mace/20231203mace128L1_epoch199model
+Using float64 for MACECalculator, which is slower but more accurate. Recommended for geometry optimization.
+mace {'potential': 'mace', 'element': 'Ti', 'a': 3.2703, 'a_ref': 3.264, 'V': 17.487, 'V_ref': 17.387, 'C11': 96.1, 'C12': 76.3, 'C44': 21.1, 'C11_ref': 134.0, 'C12_ref': 110.0, 'C44_ref': 36.0}
+mace {'potential': 'mace', 'element': 'Zr', 'a': 3.611, 'a_ref': 3.5841, 'V': 23.542, 'V_ref': 23.02, 'C11': 116.6, 'C12': 88.9, 'C44': 26.9, 'C11_ref': 104.0, 'C12_ref': 93.0, 'C44_ref': 38.0}
+mace {'potential': 'mace', 'element': 'Hf', 'a': 3.5572, 'a_ref': 3.5584, 'V': 22.505, 'V_ref': 22.528, 'C11': 117.6, 'C12': 90.5, 'C44': 40.2, 'C11_ref': 131.0, 'C12_ref': 103.0, 'C44_ref': 45.0}
+mace {'potential': 'mace', 'element': 'V', 'a': 3.0047, 'a_ref': 3.038, 'V': 13.564, 'V_ref': 14.02, 'C11': 237.4, 'C12': 145.7, 'C44': -6.6, 'C11_ref': 232.4, 'C12_ref': 119.36, 'C44_ref': 45.95}
+mace {'potential': 'mace', 'element': 'Nb', 'a': 3.3204, 'a_ref': 3.299, 'V': 18.304, 'V_ref': 17.952, 'C11': 201.0, 'C12': 124.8, 'C44': 27.6, 'C11_ref': 252.7, 'C12_ref': 133.2, 'C44_ref': 30.97}
+mace {'potential': 'mace', 'element': 'Ta', 'a': 3.3214, 'a_ref': 3.301, 'V': 18.32, 'V_ref': 17.985, 'C11': 247.3, 'C12': 169.0, 'C44': 54.5, 'C11_ref': 266.32, 'C12_ref': 158.16, 'C44_ref': 87.36}
+mace {'potential': 'mace', 'element': 'Cr', 'a': 2.8734, 'a_ref': 2.91, 'V': 11.862, 'V_ref': 12.321, 'C11': 247.3, 'C12': 208.0, 'C44': 35.8, 'C11_ref': 339.8, 'C12_ref': 58.6, 'C44_ref': 99.0}
+mace {'potential': 'mace', 'element': 'Mo', 'a': 3.1756, 'a_ref': 3.143, 'V': 16.012, 'V_ref': 15.524, 'C11': 337.6, 'C12': 230.5, 'C44': 37.6, 'C11_ref': 450.02, 'C12_ref': 172.92, 'C44_ref': 125.03}
+mace {'potential': 'mace', 'element': 'W', 'a': 3.194, 'a_ref': 3.162, 'V': 16.292, 'V_ref': 15.807, 'C11': 319.2, 'C12': 213.4, 'C44': 75.8, 'C11_ref': 532.55, 'C12_ref': 204.95, 'C44_ref': 163.13}
+[mace] 101 s
+sevennet {'potential': 'sevennet', 'element': 'Ti', 'a': 3.2593, 'a_ref': 3.264, 'V': 17.311, 'V_ref': 17.387, 'C11': 91.6, 'C12': 89.3, 'C44': 11.7, 'C11_ref': 134.0, 'C12_ref': 110.0, 'C44_ref': 36.0}
+sevennet {'potential': 'sevennet', 'element': 'Zr', 'a': 3.5904, 'a_ref': 3.5841, 'V': 23.143, 'V_ref': 23.02, 'C11': 87.3, 'C12': 85.2, 'C44': 5.5, 'C11_ref': 104.0, 'C12_ref': 93.0, 'C44_ref': 38.0}
+sevennet {'potential': 'sevennet', 'element': 'Hf', 'a': 3.542, 'a_ref': 3.5584, 'V': 22.219, 'V_ref': 22.528, 'C11': 85.9, 'C12': 91.1, 'C44': 1.2, 'C11_ref': 131.0, 'C12_ref': 103.0, 'C44_ref': 45.0}
+sevennet {'potential': 'sevennet', 'element': 'V', 'a': 3.0037, 'a_ref': 3.038, 'V': 13.55, 'V_ref': 14.02, 'C11': 320.1, 'C12': 145.4, 'C44': -1.7, 'C11_ref': 232.4, 'C12_ref': 119.36, 'C44_ref': 45.95}
+sevennet {'potential': 'sevennet', 'element': 'Nb', 'a': 3.325, 'a_ref': 3.299, 'V': 18.38, 'V_ref': 17.952, 'C11': 206.2, 'C12': 154.1, 'C44': -3.1, 'C11_ref': 252.7, 'C12_ref': 133.2, 'C44_ref': 30.97}
+sevennet {'potential': 'sevennet', 'element': 'Ta', 'a': 3.3258, 'a_ref': 3.301, 'V': 18.394, 'V_ref': 17.985, 'C11': 221.3, 'C12': 180.5, 'C44': 4.7, 'C11_ref': 266.32, 'C12_ref': 158.16, 'C44_ref': 87.36}
+sevennet {'potential': 'sevennet', 'element': 'Cr', 'a': 2.8612, 'a_ref': 2.91, 'V': 11.712, 'V_ref': 12.321, 'C11': 354.7, 'C12': 177.9, 'C44': 2.8, 'C11_ref': 339.8, 'C12_ref': 58.6, 'C44_ref': 99.0}
+sevennet {'potential': 'sevennet', 'element': 'Mo', 'a': 3.1743, 'a_ref': 3.143, 'V': 15.992, 'V_ref': 15.524, 'C11': 313.3, 'C12': 208.9, 'C44': 2.5, 'C11_ref': 450.02, 'C12_ref': 172.92, 'C44_ref': 125.03}
+sevennet {'potential': 'sevennet', 'element': 'W', 'a': 3.196, 'a_ref': 3.162, 'V': 16.322, 'V_ref': 15.807, 'C11': 362.9, 'C12': 261.2, 'C44': 20.4, 'C11_ref': 532.55, 'C12_ref': 204.95, 'C44_ref': 163.13}
+[sevennet] 104 s
+Wrote results\mlip_elements.csv
