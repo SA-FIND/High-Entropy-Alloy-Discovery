@@ -11,7 +11,17 @@ Objectives:
 Constraints:
   - size misfit delta = sqrt(sum c dV^2) / (3 V) <= 6.6 % (volume form, Baruffi et al. 2022);
   - domain of applicability: standardised Magpie distance to the nearest measured alloy no
-    larger than the 95th percentile of leave-one-alloy-out nearest-neighbour distances.
+    larger than the 95th percentile of leave-one-alloy-out nearest-neighbour distances;
+  - phase stability: no element pair at a concentration product above that of any alloy
+    reported as single-phase BCC (metaforge/phase.py; validated in scripts/phase_domain.py).
+    Without it every Pareto alloy combined Zr with W, Mo and V (Laves formers);
+  - high-temperature domain: the same distance limit, measured to alloys tested at >= 900 C.
+    Ti-Zr-V alloys soften abruptly above ~600 C (NbTiVZr: 834 MPa at 600 C, 58 MPa at 1000 C);
+    held out by alloy system, the hybrid over-predicts them 6-7x at 1000 C. Without this
+    constraint the search favoured Ti-Zr-Hf-V-Mo alloys, a family tested only at 25 C.
+
+Candidates whose predicted strength at 1000 C exceeds the largest strength measured at
+>= 900 C in the data are flagged (extrapolation in the target, not only in composition).
 
 Run (web venv): python scripts/design_nsga2.py
 Writes results/design_pareto.csv
@@ -33,6 +43,7 @@ from sklearn.preprocessing import StandardScaler
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT); sys.path.insert(0, os.path.join(ROOT, "scripts"))
 from metaforge.composition import VEC, project_to_bounded_simplex, round_on_bounded_simplex  # noqa: E402
+from metaforge.phase import label_alloys, pair_caps, violating_pairs, violation  # noqa: E402
 from metaforge.strength_edge import ELEMENTS_LEE2021, predict_rom  # noqa: E402
 import strength_models as sm  # noqa: E402
 
@@ -101,6 +112,8 @@ class HybridPredictor:
         np.fill_diagonal(dist, np.inf)
         self.Z = Z
         self.doa_threshold = float(np.percentile(dist.min(1), 95))
+        # alloys tested at >= 900 C: the only ones that show where a chemistry softens
+        self.Z_hot = Z[alloys.key.isin(set(d.key[d.T_C >= 900])).values]
 
     @staticmethod
     def magpie(f):
@@ -116,42 +129,51 @@ class HybridPredictor:
         hi = phys + float(self.q_hi.predict(xf)[0]) + self.qhat
         return point, lo, hi, phys
 
-    def doa_distance(self, f, mag=None):
+    def doa_distance(self, f, mag=None, hot=False):
         mag = self.magpie(f) if mag is None else mag
         z = self.scaler.transform(mag[None, :])
-        return float(np.sqrt(((self.Z - z) ** 2).sum(1)).min())
+        return float(np.sqrt((((self.Z_hot if hot else self.Z) - z) ** 2).sum(1)).min())
 
 
 class Problem(ElementwiseProblem):
-    def __init__(self, model):
-        super().__init__(n_var=len(EL), n_obj=2, n_ieq_constr=2, xl=0.0, xu=0.35)
+    def __init__(self, model, caps):
+        super().__init__(n_var=len(EL), n_obj=2, n_ieq_constr=4, xl=0.0, xu=0.35)
         self.m = model
+        self.caps = caps
 
     def _evaluate(self, x, out, *args, **kwargs):
         f = to_fractions(x)
         mag = self.m.magpie(f)
         _, lcb, _, _ = self.m.predict(f, 1000.0, mag)
         out["F"] = [-(lcb / 1000.0) / density(f), vec(f)]
-        out["G"] = [misfit_delta(f) - 0.066, self.m.doa_distance(f, mag) - self.m.doa_threshold]
+        out["G"] = [misfit_delta(f) - 0.066, self.m.doa_distance(f, mag) - self.m.doa_threshold,
+                    violation(f, self.caps), self.m.doa_distance(f, mag, hot=True) - self.m.doa_threshold]
 
 
 def main():
     d, X = sm.load()
     model = HybridPredictor(d, X)
-    print(f"DoA threshold {model.doa_threshold:.2f}; conformal margin {model.qhat:.0f} MPa", flush=True)
-    res = minimize(Problem(model), NSGA2(pop_size=80, repair=BoundedRepair(), eliminate_duplicates=True),
+    caps = pair_caps(label_alloys(os.path.join("data", "external", "mpea", "MPEA_dataset.csv")))
+    ys_max_hot = float(d.YS_MPa[d.T_C >= 900].max())
+    print(f"DoA threshold {model.doa_threshold:.2f}; conformal margin {model.qhat:.0f} MPa; "
+          f"max measured YS at >= 900 C {ys_max_hot:.0f} MPa", flush=True)
+    res = minimize(Problem(model, caps), NSGA2(pop_size=80, repair=BoundedRepair(), eliminate_duplicates=True),
                    ("n_gen", 60), seed=1, verbose=False)
+    if res.X is None:
+        raise SystemExit("no feasible design found")
     rows = []
     for x in np.unique(np.round(res.X, 3), axis=0):
         f = to_fractions(x)
         r = {"alloy": "".join(f"{e}{100 * c:.1f}" for e, c in f.items()), "n_el": len(f), "VEC": round(vec(f), 2),
              "density": round(density(f), 2), "delta_pct": round(100 * misfit_delta(f), 2),
-             "doa_dist": round(model.doa_distance(f), 2)}
+             "doa_dist": round(model.doa_distance(f), 2), "doa_hot_dist": round(model.doa_distance(f, hot=True), 2),
+             "phase_violations": " ".join(violating_pairs(f, caps))}
         for T in (25.0, 1000.0, 1200.0):
             s, lo, hi, phys = model.predict(f, T)
             r.update({f"YS_{int(T)}C": round(s), f"lo_{int(T)}C": round(lo),
                       f"hi_{int(T)}C": round(hi), f"physics_{int(T)}C": round(phys)})
         r["spec_lcb_1000C"] = round(r["lo_1000C"] / 1000 / r["density"], 4)
+        r["beyond_measured_1000C"] = r["YS_1000C"] > ys_max_hot
         rows.append(r)
     P = pd.DataFrame(rows).sort_values("VEC")
     os.makedirs("results", exist_ok=True)

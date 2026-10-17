@@ -1,0 +1,5 @@
+method,AUC_mean,AUC_sd,single_passed,multiphase_rejected,balanced_accuracy
+logistic(laves_index),0.6343283582089552,0.0072156457044470846,,,
+logistic(VEC+delta),0.5571144278606964,0.025497014920519267,,,
+logistic(laves_index+VEC+delta),0.6134825870646765,0.02015748250374021,,,
+pair caps (leave-one-alloy-out),,,0.8208955223880597,0.7666666666666667,0.7937810945273632
