@@ -10,6 +10,8 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines physics-informed machine learning with genetic algorithms for inverse design and graph neural network structural relaxation via CHGNet.
 
+> **Reviewing this work? A research proposal is available.** The proposal for the next phase (October 2026) sets out an experimental test of the design candidates at 600-1000 °C and a fix for the elastic-constant softening of universal ML potentials. It is shared on request: email **ahedorsolomon@gmail.com** and I will send it with the manuscript. See [Research proposal](#research-proposal) below.
+
 <div align="center">
   <a href="https://metaforge-web.onrender.com/" target="_blank" rel="noopener noreferrer">
     <img src="docs/assets/demo_screenshot.png" alt="MetaForge Interactive 3D Web Interface" width="100%">
@@ -67,6 +69,16 @@ graph TD
 MetaForge is being re-scoped to **refractory BCC alloys** (Mo-Nb-Ta-V-W family) with every model checked against measured data. The plan is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
 
 The candidate alloys previously listed here (four families) came from an analytical strength proxy and a genetic algorithm that did not enforce the 5-35 at.% bounds. They are withdrawn (kept in a local archive, not in this repository). The web app still offers all four families, with a coverage warning where measured data is sparse.
+
+### Research proposal
+
+A revised research proposal (October 2026) replaces the May 2026 version, whose results relied on the withdrawn pipeline. It builds on the manuscript in [`paper/manuscript_v2.md`](paper/manuscript_v2.md) and asks three questions:
+
+1. Do Mo and Hf suppress the abrupt softening of Ti-Zr-V alloys above 600 °C? This is where the strength model's data are thinnest, so it is the most informative experiment available.
+2. Do the model's predictions and 90% intervals, fixed before any experiment, hold for newly made alloys (two design candidates and a HfNbTaTiZr reference)?
+3. Can fine-tuning on a small set of DFT elastic constants correct the shear softening of universal interatomic potentials?
+
+The proposal is not posted here because it contains unpublished plans. Please request it from **ahedorsolomon@gmail.com**.
 
 ---
 

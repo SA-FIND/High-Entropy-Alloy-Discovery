@@ -54,3 +54,8 @@ data/external/**/*.csv
 
 # Retired material, kept locally only
 archive/
+
+# Research proposals: shared privately on request (see README, "Research proposal")
+RESEARCH_PROPOSAL*
+*[Rr]esearch_[Pp]roposal*
+proposal/
