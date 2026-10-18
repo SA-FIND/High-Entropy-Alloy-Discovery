@@ -10,7 +10,7 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines physics-informed machine learning with genetic algorithms for inverse design and graph neural network structural relaxation via CHGNet.
 
-> **Reviewing this work? A research proposal is available.** The proposal for the next phase (October 2026) sets out an experimental test of the design candidates at 600-1000 °C and a fix for the elastic-constant softening of universal ML potentials. It is shared on request: email **ahedorsolomon@gmail.com** and I will send it with the manuscript. See [Research proposal](#research-proposal) below.
+> If you are reviewing this work: a research proposal for the next phase is available by email from ahedorsolomon@gmail.com. It plans compression tests of the design candidates at 600 to 1000 °C and a correction for the soft elastic constants of universal ML potentials. A summary is under [Research proposal](#research-proposal).
 
 <div align="center">
   <a href="https://metaforge-web.onrender.com/" target="_blank" rel="noopener noreferrer">
@@ -66,19 +66,19 @@ graph TD
 
 ## Status (October 2026)
 
-MetaForge is being re-scoped to **refractory BCC alloys** (Mo-Nb-Ta-V-W family) with every model checked against measured data. The plan is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
+The research now covers refractory BCC alloys of Ti, Zr, Hf, V, Nb, Ta, Cr, Mo and W, and the manuscript is complete ([`paper/manuscript_v2.md`](paper/manuscript_v2.md)). A hybrid of edge-dislocation theory and machine learning predicts yield strength from 25 to 1600 °C, with R² = 0.65 on alloys published after the training data. Universal ML potentials give accurate lattice parameters, but their shear constants are too soft to use as inputs to the theory. The verification log is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
 
-The candidate alloys previously listed here (four families) came from an analytical strength proxy and a genetic algorithm that did not enforce the 5-35 at.% bounds. They are withdrawn (kept in a local archive, not in this repository). The web app still offers all four families, with a coverage warning where measured data is sparse.
+The four candidate alloys listed here before October 2026 came from an analytical strength proxy and a genetic algorithm that broke the 5-35 at.% bounds, and they are withdrawn. The web app still offers all four alloy families and warns where measured data are sparse.
 
 ### Research proposal
 
-A revised research proposal (October 2026) replaces the May 2026 version, whose results relied on the withdrawn pipeline. It builds on the manuscript in [`paper/manuscript_v2.md`](paper/manuscript_v2.md) and asks three questions:
+The proposal follows on from the manuscript and asks three questions:
 
-1. Do Mo and Hf suppress the abrupt softening of Ti-Zr-V alloys above 600 °C? This is where the strength model's data are thinnest, so it is the most informative experiment available.
-2. Do the model's predictions and 90% intervals, fixed before any experiment, hold for newly made alloys (two design candidates and a HfNbTaTiZr reference)?
-3. Can fine-tuning on a small set of DFT elastic constants correct the shear softening of universal interatomic potentials?
+1. Do Mo and Hf stop Ti-Zr-V alloys from softening above 600 °C? The strength model has the least data there.
+2. Do predictions and 90% intervals, fixed before the experiments, hold for two newly made design candidates and a HfNbTaTiZr reference alloy?
+3. Does fine-tuning on a few DFT elastic constants correct the soft shear constants of universal interatomic potentials?
 
-The proposal is not posted here because it contains unpublished plans. Please request it from **ahedorsolomon@gmail.com**.
+It contains unpublished plans, so I send it by email on request: ahedorsolomon@gmail.com.
 
 ---
 
