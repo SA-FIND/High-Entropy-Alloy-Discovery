@@ -1,0 +1,89 @@
+{
+ "target": "room-temperature compressive yield strength (GPa)",
+ "source": "MPEA dataset, Borg et al., Sci. Data 7 (2020) 430",
+ "model": "HistGradientBoosting",
+ "n_tests": 450,
+ "n_alloys": 314,
+ "cv": "GroupKFold(5) by composition",
+ "cv_mae_gpa": 0.2584,
+ "cv_r2": 0.5644,
+ "element_counts": {
+  "Al": 198,
+  "Co": 150,
+  "Fe": 190,
+  "Ni": 191,
+  "Si": 35,
+  "Cr": 198,
+  "C": 18,
+  "Mo": 141,
+  "Nb": 232,
+  "Cu": 60,
+  "Ti": 256,
+  "Mn": 58,
+  "V": 119,
+  "Li": 9,
+  "Mg": 14,
+  "Zn": 12,
+  "Sn": 5,
+  "Ta": 123,
+  "Zr": 154,
+  "Hf": 97,
+  "W": 44,
+  "Re": 6,
+  "Ca": 5,
+  "Y": 3,
+  "Pd": 4,
+  "Sc": 2
+ },
+ "categories": {
+  "Refractory": {
+   "n_validation_rows": 113,
+   "cv_mae_gpa": 0.25590498483895563,
+   "cv_r2": 0.4769646022261944,
+   "element_counts": {
+    "W": 44,
+    "Mo": 141,
+    "Ta": 123,
+    "Nb": 232,
+    "V": 119
+   }
+  },
+  "Corrosion": {
+   "n_validation_rows": 188,
+   "cv_mae_gpa": 0.2794061709846734,
+   "cv_r2": 0.5875552572957186,
+   "element_counts": {
+    "Co": 150,
+    "Cr": 198,
+    "Fe": 190,
+    "Ni": 191,
+    "Cu": 60
+   }
+  },
+  "Lightweight": {
+   "n_validation_rows": 14,
+   "cv_mae_gpa": 0.15399602329449125,
+   "cv_r2": -3.7701996996049454,
+   "element_counts": {
+    "Al": 198,
+    "Mg": 14,
+    "Li": 9,
+    "Ti": 256,
+    "Zn": 12
+   }
+  },
+  "Aerospace": {
+   "n_validation_rows": 95,
+   "cv_mae_gpa": 0.18120460967125032,
+   "cv_r2": 0.498856054001234,
+   "element_counts": {
+    "Al": 198,
+    "Ti": 256,
+    "Sc": 2,
+    "Zr": 154,
+    "V": 119
+   }
+  }
+ },
+ "sklearn": "1.8.0"
+}

@@ -723,6 +723,8 @@
                         <div class="result-label">Predicted Yield Strength (σ<sub>y</sub>)</div>
                         <div class="result-value val-strength"><span id="val-strength">0.00</span><span
                                 class="result-unit">GPa</span></div>
+                        <div id="strength-source" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;"></div>
+                        <div id="strength-warning" style="font-size: 0.7rem; color: #f5a623; margin-top: 2px;"></div>
                     </div>
                     <div class="result-tile" id="energyTile" style="display: none;">
                         <div class="result-label">GNN Ground-State Energy (E)</div>
@@ -742,7 +744,7 @@
                         <div class="result-label" style="margin: 0; font-weight: 600; color: var(--text-primary);">SQS Supercell</div>
                         <div style="display: flex; gap: 4px; align-items: center;">
                             <button id="modeBtnLive" class="viewer-mode-btn viewer-mode-btn--active" onclick="setViewerMode('live')" title="Dynamically populate atom sites based on current slider percentages">Live Atoms</button>
-                            <button id="modeBtnOptimal" class="viewer-mode-btn" onclick="setViewerMode('optimal')" title="Show ground-truth CHGNet-relaxed optimal SQS blueprint">Optimal SQS</button>
+                            <button id="modeBtnOptimal" class="viewer-mode-btn" onclick="setViewerMode('optimal')" title="Show the optimal SQS supercell (CHGNet-relaxed if available, otherwise the unrelaxed blueprint)">Optimal SQS</button>
                             <span id="cifStatusBadge" style="font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); font-family: var(--font-mono); margin-left: 2px;">3D WebGL</span>
                         </div>
                     </div>
@@ -1018,6 +1020,8 @@
                 animateValue(densityEl, oldDensity, data.density, 400, 2);
                 animateValue(strengthEl, oldStrength, data.strength, 400, 2);
                 animateValue(scoreEl, oldScore, data.score, 400, 2);
+                document.getElementById('strength-source').textContent = data.strength_source || '';
+                document.getElementById('strength-warning').textContent = data.coverage_warning || '';
 
                 if (data.energy !== undefined && data.energy !== null) {
                     energyTile.style.display = 'block';

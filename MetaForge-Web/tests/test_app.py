@@ -61,6 +61,31 @@ def test_predict_endpoint_all_categories(client):
         assert 'strength' in data
         assert 'score' in data
 
+def test_refractory_uses_hybrid_model_with_intervals(client):
+    """MoNbTaW (measured: about 1,050 MPa at 25 C, 548 MPa at 1000 C) gets the hybrid model."""
+    payload = {"category": "Refractory Alloy", "elements": {'Mo': 25, 'Nb': 25, 'Ta': 25, 'W': 25}}
+    data = json.loads(client.post('/predict', json=payload).data)
+    lo, hi = data['strength_25C_interval']
+    assert lo <= data['strength'] <= hi
+    lo, hi = data['strength_1000C_interval']
+    assert lo <= data['strength_1000C'] <= hi
+    assert 0.3 < data['strength_1000C'] < 0.9
+    assert data['strength_source'].startswith('Hybrid model')
+
+
+def test_refractory_flags_laves_forming_pairs(client):
+    payload = {"category": "Refractory Alloy", "elements": {'Ti': 20, 'Zr': 20, 'V': 20, 'Mo': 20, 'W': 20}}
+    data = json.loads(client.post('/predict', json=payload).data)
+    assert 'Zr-W' in (data['coverage_warning'] or '')
+
+
+def test_refractory_outside_physics_elements_falls_back(client):
+    payload = {"category": "Refractory Alloy", "elements": {'Al': 20, 'Mo': 20, 'Nb': 20, 'Ta': 20, 'Ti': 20}}
+    data = json.loads(client.post('/predict', json=payload).data)
+    assert 'strength_1000C' not in data
+    assert data['strength'] > 0
+
+
 def test_predict_endpoint_zero_input(client):
     """Test the /predict API with all zeros to prevent division by zero."""
     payload = {

@@ -10,6 +10,8 @@
 
 **MetaForge** is a computational materials science pipeline designed to discover optimal High Entropy Alloys (HEAs) for aerospace, corrosion-resistance, lightweight structural, and high-temperature applications. It combines physics-informed machine learning with genetic algorithms for inverse design and graph neural network structural relaxation via CHGNet.
 
+> **Reviewing this work? A research proposal is available.** The proposal for the next phase (October 2026) sets out an experimental test of the design candidates at 600-1000 °C and a fix for the elastic-constant softening of universal ML potentials. It is shared on request: email **ahedorsolomon@gmail.com** and I will send it with the manuscript. See [Research proposal](#research-proposal) below.
+
 <div align="center">
   <a href="https://metaforge-web.onrender.com/" target="_blank" rel="noopener noreferrer">
     <img src="docs/assets/demo_screenshot.png" alt="MetaForge Interactive 3D Web Interface" width="100%">
@@ -22,7 +24,7 @@
 ## Core Features
 
 - **Combinatorial Engine:** Generates candidate alloy compositions and filters them using established physical metallurgy rules (e.g., lattice strain limits δ < 6.6% and specific VEC phase thresholds).
-- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict continuum density and dislocation-calibrated yield strength ($\sigma_y = \sigma_0 + M \cdot \tau_{ss}$).
+- **Property Prediction:** Utilizes Random Forest regression models trained on 132 Matminer Magpie descriptors to predict density; yield strength is predicted by a model trained on measured room-temperature compression data (MPEA dataset). The older analytical strength proxy ($\sigma_y = \sigma_0 + M \cdot \tau_{ss}$, ad hoc constants) is kept only as a legacy baseline.
 - **Inverse Design:** A custom genetic algorithm evolves alloy compositions over multiple generations to maximize specific strength (strength-to-weight ratio).
 - **Structure Relaxation:** Optimizes SQS supercell blueprints (54-atom BCC / 48-atom FCC) using the CHGNet graph neural network interatomic potential, with post-relaxation space group verification via `SpacegroupAnalyzer`.
 - **Web Interface:** A lightweight Flask and React interface with a clean, dark-themed UI for real-time model inference.
@@ -31,7 +33,7 @@
 
 ## Hierarchical Multi-Fidelity Discovery Framework
 
-MetaForge employs a **three-tier multi-fidelity screening architecture** designed to balance high-throughput exploratory bandwidth with atomistic and quantum thermodynamic accuracy:
+MetaForge employs a **three-tier multi-fidelity screening architecture** designed to balance high-throughput screening with atomistic checks. Tier 3 is a protocol, not yet executed:
 
 ```mermaid
 graph TD
@@ -39,7 +41,7 @@ graph TD
         A1["• Combinatorial phase filtering: Zhang δ ≤ 6.6%, Guo VEC thresholds"]
         A2["• Miedema mixing enthalpy: -15 ≤ ΔH_mix ≤ +5 kJ/mol, Ω ≥ 1.1"]
         A3["• 132 Magpie feature descriptors + Random Forest surrogate regressors"]
-        A4["• Dislocation-calibrated Yield Strength: σ_y = σ_0 + M·τ_ss"]
+        A4["• Yield strength from measured-data model (MPEA); legacy analytical proxy as baseline"]
     end
 
     subgraph T2["<b>TIER 2: Atomistic GNN Relaxation & SRO Optimization</b>"]
@@ -49,68 +51,71 @@ graph TD
         B4["• Thermodynamic Formation Energy: ΔE_f relative to pure elements"]
     end
 
-    subgraph T3["<b>TIER 3: First-Principles DFT & Experimental Validation</b>"]
-        C1["• High-throughput ab-initio DFT (VASP/QE) for ground-truth C_ij"]
-        C2["• Vacuum arc remelting & XRD/SEM/Vickers hardness synthesis roadmap"]
+    subgraph T3["<b>TIER 3 (planned, not yet run): DFT & Experimental Validation</b>"]
+        C1["• Proposed: DFT (VASP/QE) elastic constants for selected candidates"]
+        C2["• Proposed: arc melting, XRD/SEM, hardness (via collaboration)"]
     end
 
-    T1 -->|Top Pareto Candidates| T2
+    T1 -->|Top GA candidates| T2
     T2 -->|Optimized Blueprints| T3
 ```
 
-> **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline verifies that Tier 1 proxies are smoothly recoverable from Magpie features, while Tier 2 CHGNet relaxations reveal the true non-linear atomic volume contractions (+5.1% in refractory systems) that linear proxies omit.
+> **Methodological Note on Surrogates:** In Tier 1, property models operate on analytical proxies (composition-weighted density and Taylor-factor solid-solution yield strength) to evaluate hundreds of thousands of combinations in milliseconds. The LinearRegression baseline confirms that these proxies are linear in Magpie features (R² ≈ 0.99), so a model trained on them only reproduces the formula. Yield strength is therefore now predicted by a model trained on **measured** data (see *Measured-Data Strength Model* below). Tier 2 CHGNet relaxations are benchmarked against measured lattice parameters (see *Structural Validation*).
 
 ---
 
-## Model Performance & Discovered Candidates
+## Status (October 2026)
 
-The pipeline currently supports four distinct High-Entropy Alloy categories. All discovered compositions strictly enforce the **Yeh & Cantor multi-principal element criterion ($5\,\text{at.\%} \le c_i \le 35\,\text{at.\%}$)** via constrained Genetic Algorithm optimization:
+MetaForge is being re-scoped to **refractory BCC alloys** (Mo-Nb-Ta-V-W family) with every model checked against measured data. The plan is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
 
-### 1. Refractory Alloys (BCC, 54-atom supercell)
-- **Yield Strength Model:** RMSE 0.007 GPa | R² 0.994 via 5-fold cross-validation
-- **Density Model:** RMSE 0.046 g/cm³ | R² 0.998 via 5-fold cross-validation
-- **Top Candidate:** `W:18.5% - Mo:24.7% - Ta:26.1% - Nb:16.8% - V:13.9%`
-- **Calibrated Yield Strength ($\sigma_y$):** 1.96 GPa (1960 MPa) | **Density:** 14.29 g/cm³
-- **Formation Energy ($\Delta E_f$):** +0.0286 eV/atom (2.76 kJ/mol; solid-solution stabilized by $\Delta S_{\text{mix}} = 13.4\,\text{J/mol}\cdot\text{K}$)
+The candidate alloys previously listed here (four families) came from an analytical strength proxy and a genetic algorithm that did not enforce the 5-35 at.% bounds. They are withdrawn (kept in a local archive, not in this repository). The web app still offers all four families, with a coverage warning where measured data is sparse.
 
-### 2. Corrosion-Resistant Alloys (FCC, 48-atom supercell)
-- **Yield Strength Model:** RMSE 0.007 GPa | R² 0.973 via 5-fold cross-validation
-- **Density Model:** RMSE 0.011 g/cm³ | R² 0.996 via 5-fold cross-validation
-- **Top Candidate:** `Co:8.6% - Cr:35.4% - Fe:33.1% - Ni:11.2% - Cu:11.6%`
-- **Calibrated Yield Strength ($\sigma_y$):** 0.74 GPa (740 MPa) | **Density:** 8.00 g/cm³
-- **Thermodynamic Ratio ($\Omega$):** 1.15 (single-phase FCC solid solution)
+### Research proposal
 
-### 3. Lightweight Alloys (FCC, 48-atom supercell)
-- **Yield Strength Model:** RMSE 0.007 GPa | R² 0.994 via 5-fold cross-validation
-- **Density Model:** RMSE 0.018 g/cm³ | R² 0.999 via 5-fold cross-validation
-- **Top Candidate:** `Al:35.7% - Mg:11.5% - Li:5.1% - Ti:35.7% - Zn:11.9%`
-- **Calibrated Yield Strength ($\sigma_y$):** 0.63 GPa (630 MPa) | **Density:** 3.54 g/cm³
-- **Specific Yield Strength:** 178.0 MPa/(g/cm³)
+A revised research proposal (October 2026) replaces the May 2026 version, whose results relied on the withdrawn pipeline. It builds on the manuscript in [`paper/manuscript_v2.md`](paper/manuscript_v2.md) and asks three questions:
 
-### 4. Aerospace Alloys (FCC, 48-atom supercell)
-- **Yield Strength Model:** RMSE 0.010 GPa | R² 0.937 via 5-fold cross-validation
-- **Density Model:** RMSE 0.071 g/cm³ | R² 0.930 via 5-fold cross-validation
-- **Top Candidate:** `Al:5.9% - Ti:32.2% - Sc:6.9% - Zr:35.0% - V:20.1%`
-- **Calibrated Yield Strength ($\sigma_y$):** 0.83 GPa (830 MPa) | **Density:** 5.01 g/cm³
+1. Do Mo and Hf suppress the abrupt softening of Ti-Zr-V alloys above 600 °C? This is where the strength model's data are thinnest, so it is the most informative experiment available.
+2. Do the model's predictions and 90% intervals, fixed before any experiment, hold for newly made alloys (two design candidates and a HfNbTaTiZr reference)?
+3. Can fine-tuning on a small set of DFT elastic constants correct the shear softening of universal interatomic potentials?
+
+The proposal is not posted here because it contains unpublished plans. Please request it from **ahedorsolomon@gmail.com**.
 
 ---
 
 ## Structural Validation (CHGNet GNN Relaxations)
 
-To evaluate the physical validity of the Rule-of-Mixtures (RoM) density proxy, we generated Special Quasirandom Structures (SQS) (54-atom BCC for Refractory, 48-atom FCC for others) for the top candidates and relaxed them using the **CHGNet** graph neural network potential. 
+> **Correction (October 2026).** Earlier versions of this README and the accompanying manuscript reported CHGNet density gaps of up to +5.1% ("non-Vegard contraction"). Those numbers were not produced by a relaxation: the `*_Relaxed.cif` files were byte-identical copies of the unrelaxed blueprints, written by a fallback path when CHGNet was not installed. The files and the claim are withdrawn; `run_master.py` now writes a relaxed CIF only after a converged relaxation.
 
-To ensure the results represent true equilibrium structures and are not relaxation artifacts, we verified force convergence (< 0.1 eV/Å target, achieved in all runs within 35 steps) and evaluated statistical variance across multiple random SQS atomic shuffles (different random seeds).
+To check whether the relaxation step is trustworthy, `scripts/benchmark_chgnet.py` relaxes SQS supercells (54-atom BCC, 48-atom FCC; atoms **and** cell; fmax = 0.05 eV/Å; 3 SQS seeds each) of alloys with measured lattice parameters. Results: `results/chgnet_benchmark.csv`; structures: `data/structures/benchmark/`.
 
-| Category | RoM Density (g/cm³) | CHGNet Density (g/cm³) | Gap (%) | Seed Std Dev (g/cm³) | Verdict |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Refractory** | 9.40 | 9.88 (n=3) | +5.1% | ±0.026 (0.3%) | Real, strong margin |
-| **Corrosion** | 8.00 | 8.27 (n=3) | +3.4% | ±0.033 (0.4%) | Real, solid margin |
-| **Lightweight** | 2.62 | 2.69 (n=8) | +2.8% | ±0.011 (0.4%) | Real, confirmed after widening |
-| **Aerospace** | 3.67 | 3.62 (n=3) | -1.4% | ±0.003 (0.1%) | Real, small but clean effect |
+| Alloy | a, CHGNet (Å) | a vs experiment | Density vs experiment | Volume vs rule of mixtures |
+| :--- | :---: | :---: | :---: | :---: |
+| NbMoTaW (BCC) | 3.240 | +0.83% | −0.52% | +0.95% |
+| NbMoTaWV (BCC) | 3.196 | +0.41% | −0.08% | +0.52% |
+| CoCrFeNi (FCC) | 3.518 | −1.47% | n/a | −5.11% |
+| CoCrFeMnNi (FCC) | 3.515 | −2.36% | n/a | −6.12% |
 
-### Key Findings:
-- **Lattice Relaxation Effects:** The GNN relaxations reveal a clear physical density gap from simple linear rule-of-mixtures predictions, ranging from a +5.1% contraction in Refractory to a -1.4% expansion in Aerospace.
-- **Statistical Significance:** The seed-to-seed standard deviation (representing single-SQS realization noise) is consistently $\le 0.4\%$, leaving a comfortable margin that confirms the density gaps represent real physical bonding trends rather than random shuffle noise. For the Lightweight category, the seed count was widened to $n=8$ to tighten the standard error and confirm the significance of the 2.8% gap.
+Seed-to-seed scatter in *a* is ≤ 0.004 Å. Refractory references: Senkov et al., *Intermetallics* 18 (2010) 1758; FCC values are typical literature XRD values.
+
+### Key Findings
+- **Refractory MPEAs show no volume contraction.** CHGNet matches measured lattice parameters within 1% and density within 0.6%; the relaxed volume is slightly *above* the rule of mixtures.
+- **The 5–6% shrinkage in 3d FCC alloys is a model artefact, not physics.** CHGNet under-predicts the measured lattice parameter, and its predicted Fe/Co/Mn magnetic moments fall during relaxation, consistent with a magnetovolume error of the potential.
+- **The rule-of-mixtures density proxy is sound:** against 47 measured alloys in the MPEA dataset its median error is 0.95%.
+
+## Measured-Data Strength Model
+
+`scripts/train_measured_strength.py` trains yield strength on measured data from the open MPEA dataset (Borg et al., *Scientific Data* 7 (2020) 430): 450 room-temperature compression tests on 314 distinct alloys, featurized with the same 132 Magpie descriptors the web app uses. Validation is 5-fold `GroupKFold` by composition, so no alloy appears in both training and test folds.
+
+| Model | CV MAE (GPa) | CV R² |
+| :--- | :---: | :---: |
+| Predict the mean (baseline) | 0.412 | 0.00 |
+| Ridge | 0.323 | 0.29 |
+| Random Forest | 0.260 | 0.54 |
+| **HistGradientBoosting (selected)** | **0.258** | **0.56** |
+
+Example: NbMoTaW is predicted at 1.09 GPa; Senkov et al. (2011) measured about 1.06 GPa in compression.
+
+**Coverage limits.** Few measured alloys contain Li (9), Mg (14), Zn (12) or Sc (2). For the Lightweight category the per-category CV R² is negative, so its strength predictions are extrapolations; the web app flags any composition with ≥ 5 at.% of an element present in fewer than 20 measured alloys.
 
 ---
 
@@ -207,7 +212,7 @@ MetaForge/
 ├── requirements.txt             # Primary environment dependencies
 ├── render.yaml                  # Cloud deployment configuration
 ├── README.md                    # Project documentation
-├── RESEARCH_PROPOSAL.md         # Formal multi-fidelity ICME research proposal
+├── docs/PUBLICATION_PLAN.md     # Current plan (refractory scope, validation)
 └── LICENSE                      # MIT Open-Source License
 ```
 
@@ -243,11 +248,14 @@ If you use MetaForge in your research, academic proposals, or materials discover
    - Guo, S., & Liu, C. T. *Phase stability in high entropy alloys: Formation of solid-solution phase or amorphous phase.* **Prog. Nat. Sci.: Mater. Int.** 21 (2011) 433–446.
    - Fieser, D., Dewanjee, U., & Hu, A. *HEA-Bench: An AI-Agent-Optimized Calculator of High-Entropy Alloy and Oxide Descriptors and Phase-Prediction Rules.* **Materials** 19(14) (2026) 3075. [DOI: 10.3390/ma19143075](https://doi.org/10.3390/ma19143075).
 2. **Dislocation Mechanics & Solid-Solution Strengthening:**
-   - Varvenne, C., Luque, A., & Curtin, W. A. *Theory of strengthening in dilute and concentrated random solid solutions.* **Acta Materialia** 118 (2016) 164–176.
-   - Toda-Caraballo, I., & Rivera-Díaz-del-Castillo, P. E. J. *A general formulation for solid solution hardening in high entropy alloys.* **Acta Materialia** 85 (2015) 14–23.
-3. **Graph Neural Network Interatomic Potentials:**
-   - Deng, B., Zhong, P., Jun, K., et al. *CHGNet: A pretrained universal neural network potential for charge-informed atomistic modeling.* **Nature Machine Intelligence** 5 (2023) 1031–1041.
-4. **Materials Informatics Core:**
+   - Varvenne, C., Luque, A., & Curtin, W. A. *Theory of strengthening in fcc high entropy alloys.* **Acta Materialia** 118 (2016) 164–176.
+   - Maresca, F., & Curtin, W. A. *Mechanistic origin of high strength in refractory BCC high entropy alloys up to 1900K.* **Acta Materialia** 182 (2020) 235–249. [DOI: 10.1016/j.actamat.2019.10.015](https://doi.org/10.1016/j.actamat.2019.10.015).
+   - Toda-Caraballo, I., & Rivera-Díaz-del-Castillo, P. E. J. *Modelling solid solution hardening in high entropy alloys.* **Acta Materialia** 85 (2015) 14–23.
+3. **Data:**
+   - Borg, C. K. H., et al. *Expanded dataset of mechanical properties and observed phases of multi-principal element alloys.* **Scientific Data** 7 (2020) 430. [DOI: 10.1038/s41597-020-00768-9](https://doi.org/10.1038/s41597-020-00768-9).
+4. **Graph Neural Network Interatomic Potentials:**
+   - Deng, B., Zhong, P., Jun, K., et al. *CHGNet as a pretrained universal neural network potential for charge-informed atomistic modelling.* **Nature Machine Intelligence** 5 (2023) 1031–1041.
+5. **Materials Informatics Core:**
    - Jain, A., Ong, S. P., Hautier, G., et al. *Commentary: The Materials Project: A materials genome approach to accelerating materials innovation.* **APL Materials** 1 (2013) 011002.
    - Ward, L., Dunn, A., Faghaninia, A., et al. *Matminer: An open source toolkit for materials data mining.* **Comput. Mater. Sci.** 152 (2018) 60–69.
    - Ong, S. P., Richards, W. D., Jain, A., et al. *Python Materials Genomics (pymatgen): A robust, open-source python library for materials analysis.* **Comput. Mater. Sci.** 68 (2013) 314–319.

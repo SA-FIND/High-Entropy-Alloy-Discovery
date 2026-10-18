@@ -3,6 +3,7 @@ import logging
 from flask import Flask, request, jsonify, render_template, make_response, send_from_directory
 from flask_cors import CORS
 import joblib
+import json
 from pymatgen.core import Composition
 from matminer.featurizers.composition import ElementProperty
 import warnings
@@ -75,6 +76,31 @@ for web_cat, file_cat in categories_map.items():
     except Exception as e:
         logger.warning(f"Could not load models for {web_cat}: {e}")
 
+# Yield strength trained on MEASURED data (MPEA dataset, RT compression); see
+# scripts/train_measured_strength.py. Falls back to the per-category proxy models.
+measured_strength = None
+measured_meta = {}
+try:
+    measured_strength = joblib.load(os.path.join(BASE_DIR, 'models', 'ml_strength_measured.model'))
+    with open(os.path.join(BASE_DIR, 'models', 'ml_strength_measured.json'), encoding='utf-8') as f:
+        measured_meta = json.load(f)
+    logger.info("Loaded measured-data strength model.")
+except Exception as e:
+    logger.warning(f"Measured strength model not loaded, using proxy models: {e}")
+
+# Refractory hybrid (edge-dislocation theory + ML residual, 90% intervals); see
+# scripts/export_web_model.py and paper/manuscript_v2.md.
+refractory_hybrid = None
+try:
+    from refractory_hybrid import RefractoryHybrid
+    refractory_hybrid = RefractoryHybrid(os.path.join(BASE_DIR, 'models', 'refractory_hybrid.joblib'))
+    logger.info("Loaded refractory hybrid strength model.")
+except Exception as e:
+    logger.warning(f"Refractory hybrid model not loaded: {e}")
+
+# An element is "covered" if at least this many measured alloys contain it.
+MIN_ALLOYS_PER_ELEMENT = 20
+
 ep_feat = ElementProperty.from_preset("magpie")
 logger.info("All components initialized successfully.")
 
@@ -116,7 +142,7 @@ def sitemap():
 
 @app.route('/structures/<category>')
 def get_structure(category):
-    """Serves the relaxed CIF crystal structure for the requested alloy category."""
+    """Serves the relaxed CIF if one exists, else the unrelaxed blueprint."""
     cat_map = {
         "Refractory Alloy": "Refractory",
         "Corrosion Resistance": "Corrosion",
@@ -199,16 +225,49 @@ def predict():
         
         # Predicting bulk density and strength metrics
         density = ml_density.predict([features])[0]
-        strength = ml_strength.predict([features])[0]
+        hybrid = None
+        if (category == "Refractory Alloy" and refractory_hybrid is not None
+                and refractory_hybrid.covers(comp_dict)):
+            rt, rt_lo, rt_hi = refractory_hybrid.predict(comp_dict, features, 25.0)
+            ht, ht_lo, ht_hi = refractory_hybrid.predict(comp_dict, features, 1000.0)
+            strength = rt / 1000.0
+            strength_source = (f"Hybrid model: edge-dislocation theory + ML correction, 72 measured BCC alloys. "
+                               f"90% interval {rt_lo / 1000:.2f}-{rt_hi / 1000:.2f} GPa at 25 C; "
+                               f"at 1000 C {ht / 1000:.2f} GPa ({ht_lo / 1000:.2f}-{ht_hi / 1000:.2f})")
+            notes = refractory_hybrid.warnings(comp_dict, features)
+            if ht > refractory_hybrid.ys_max_hot_MPa:
+                notes.append(f"1000 C value exceeds the strongest alloy measured at >= 900 C "
+                             f"({refractory_hybrid.ys_max_hot_MPa:.0f} MPa)")
+            coverage_warning = "; ".join(notes) + "." if notes else None
+            hybrid = {'strength_25C_interval': [round(rt_lo / 1000, 3), round(rt_hi / 1000, 3)],
+                      'strength_1000C': round(ht / 1000, 3),
+                      'strength_1000C_interval': [round(ht_lo / 1000, 3), round(ht_hi / 1000, 3)]}
+        elif measured_strength is not None:
+            strength = measured_strength.predict([features])[0]
+            counts = measured_meta.get('element_counts', {})
+            sparse = sorted(el for el, frac in comp_dict.items()
+                            if frac >= 0.05 and counts.get(el, 0) < MIN_ALLOYS_PER_ELEMENT)
+            strength_source = (f"Measured-data model (MPEA, RT compression, "
+                               f"CV MAE {measured_meta.get('cv_mae_gpa', 0):.2f} GPa)")
+            coverage_warning = (f"Few measured alloys contain {', '.join(sparse)}; treat this strength as an extrapolation."
+                                if sparse else None)
+        else:
+            strength = ml_strength.predict([features])[0]
+            strength_source = "Analytical proxy (solid-solution model), not measured data"
+            coverage_warning = None
         score = strength / density if density > 0 else 0
         
         res = {
             'density': round(float(density), 2),
             'strength': round(float(strength), 2),
             'score': round(float(score), 2),
-            'composition': {el: round(frac * 100, 1) for el, frac in comp_dict.items()}
+            'composition': {el: round(frac * 100, 1) for el, frac in comp_dict.items()},
+            'strength_source': strength_source,
+            'coverage_warning': coverage_warning,
         }
-        
+        if hybrid:
+            res.update(hybrid)
+
         if ml_energy is not None:
             energy = ml_energy.predict([features])[0]
             res['energy'] = round(float(energy), 3)
