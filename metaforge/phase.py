@@ -1,14 +1,15 @@
-"""Phase-stability domain for refractory alloy design: pairwise chemistry caps.
+"""Pairwise chemistry caps that keep alloy design close to reported single-phase BCC alloys.
 
-Simple descriptors (VEC, size misfit, a Laves-pair index) separate single-phase BCC from
-multiphase refractory alloys poorly in the MPEA data (cross-validated AUC about 0.63), because
-reported phases depend on processing. A stricter, transparent rule is used instead: a candidate
-may not contain any element pair (i, j) at a concentration product c_i c_j larger than in some
-alloy reported as single-phase BCC. Pairs never seen together in a single-phase alloy
-(e.g. Zr-W, Hf-W, Zr-Cr, which form Laves phases) get a cap of zero.
+A candidate passes if no element pair (i, j) has a concentration product c_i c_j above the
+largest value in any alloy reported as single-phase BCC. Pairs that never occur together in
+such an alloy, including the Laves formers Zr-W, Hf-W and Zr-Cr, get a cap of zero.
 
-An alloy counts as single-phase only if every report of it in the dataset says "BCC"
-(e.g. HfNbTaTiZr, reported as BCC and as BCC+HCP after annealing, counts as multiphase).
+Logistic regression on VEC, size misfit and a Laves-pair index separates the MPEA phase labels
+poorly (cross-validated AUC about 0.63) because the labels depend on processing. The caps
+classify better; scripts/phase_domain.py compares the two.
+
+An alloy counts as single-phase only if every report of it says "BCC", so HfNbTaTiZr, reported
+both as BCC and as BCC+HCP, counts as multiphase.
 """
 import itertools
 

@@ -14,14 +14,14 @@ Constraints:
     larger than the 95th percentile of leave-one-alloy-out nearest-neighbour distances;
   - phase stability: no element pair at a concentration product above that of any alloy
     reported as single-phase BCC (metaforge/phase.py; validated in scripts/phase_domain.py).
-    Without it every Pareto alloy combined Zr with W, Mo and V (Laves formers);
+    The edge theory rewards large misfit, so an unconstrained search picks Zr with W, Mo
+    and V, which form Laves phases;
   - high-temperature domain: the same distance limit, measured to alloys tested at >= 900 C.
-    Ti-Zr-V alloys soften abruptly above ~600 C (NbTiVZr: 834 MPa at 600 C, 58 MPa at 1000 C);
-    held out by alloy system, the hybrid over-predicts them 6-7x at 1000 C. Without this
-    constraint the search favoured Ti-Zr-Hf-V-Mo alloys, a family tested only at 25 C.
+    Ti-Zr-V alloys soften abruptly above ~600 C (NbTiVZr: 834 MPa at 600 C, 58 MPa at 1000 C),
+    and the hybrid over-predicts such alloys 6-7x at 1000 C when their system is held out.
 
-Candidates whose predicted strength at 1000 C exceeds the largest strength measured at
->= 900 C in the data are flagged (extrapolation in the target, not only in composition).
+Candidates predicted above the strongest alloy measured at >= 900 C are flagged, because the
+model is then extrapolating in strength as well as in composition.
 
 Run (web venv): python scripts/design_nsga2.py
 Writes results/design_pareto.csv

@@ -1,9 +1,8 @@
 """
 Benchmark CHGNet relaxation of SQS supercells against measured HEA data.
 
-Why: the repo's earlier "relaxed" CIFs were written by a fallback path when
-CHGNet was not installed, so they were identical to the blueprints. This script
-makes the relaxation step explicit, reproducible and checkable:
+The script fails if CHGNet is missing, so it can never write an unrelaxed structure
+under a "relaxed" name.
 
   1. Builds an SQS-like supercell for each alloy by Monte Carlo minimisation of
      first- and second-shell Warren-Cowley parameters (fixed seeds).

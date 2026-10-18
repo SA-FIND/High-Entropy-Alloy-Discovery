@@ -1,5 +1,5 @@
 """
-Train a yield-strength model on MEASURED data instead of the analytical proxy.
+Train the web app's room-temperature yield-strength model on measured data.
 
 Data: MPEA dataset, Borg et al., Scientific Data 7 (2020) 430,
       https://github.com/CitrineInformatics/MPEA_dataset (data/external/mpea/).

@@ -1,5 +1,6 @@
 """
-Strength models for single-phase BCC refractory alloys, with honest validation.
+Strength models for single-phase BCC refractory alloys, validated on alloys and alloy systems
+left out of training.
 
 Data: data/processed/rhea_strength.csv, physics_domain rows only.
 Models (all predict yield strength in MPa at the test temperature):

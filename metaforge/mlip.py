@@ -100,9 +100,9 @@ def cubic_elastic_constants(atoms, calc, delta=0.005, relax_ions=False, fmax=0.0
 def cubic_elastic_constants_energy(atoms, calc, h=0.01, n=5, relax_ions=False, fmax=0.01, steps=300):
     """Cubic C11, C12, C44 (GPa) from energy curvature, which needs no stresses.
 
-    Used instead of the stress route because CHGNet's stresses are not consistent with its
-    own energies for these cells (bulk modulus of bcc W: 125 GPa from stress vs 271 GPa
-    from E(V)); MACE agrees between the two routes. Strains (Voigt, small):
+    CHGNet's stresses disagree with its own energies for these cells (bulk modulus of bcc W:
+    125 GPa from stress, 271 GPa from E(V)), so fit energies; MACE gives the same answer
+    either way. Strains (Voigt, small):
       hydrostatic e*I              dE/V = (9/2) B e^2           B = (C11 + 2 C12)/3
       tetragonal diag(e, -e, 0)    dE/V = (C11 - C12) e^2
       shear e_xy = e_yx = e        dE/V = 2 C44 e^2   (averaged over xy, yz, xz)
