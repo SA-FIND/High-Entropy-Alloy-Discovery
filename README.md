@@ -168,7 +168,7 @@ pip install pymatgen mp-api python-dotenv numpy pandas scikit-learn matplotlib m
 
 ### 2. Configure API Keys
 
-Create a `.env` file in the root directory and add your Materials Project API key. This is required for the data harvesting step in `HEA.ipynb`.
+Create a `.env` file in the root directory and add your Materials Project API key. Only the prototype notebook (`notebooks/HEA_Exploration.ipynb`) uses it; `run_master.py` and the scripts in `scripts/` do not.
 
 ```bash
 MY_API_KEY=your_materials_project_api_key_here
@@ -181,7 +181,7 @@ You can run the full machine learning pipeline sequentially by executing the mas
 ```bash
 python run_master.py
 ```
-*Alternatively, you can open and run `notebooks/HEA_Exploration.ipynb` for an interactive, cell-by-cell walkthrough of the data harvesting, filtering, and model training process.*
+*`notebooks/HEA_Exploration.ipynb` is the May 2026 prototype, kept for the record. Its strength target is a rule-of-mixtures proxy and its random alloys have no composition limits, so its numbers should not be used. The manuscript results come from the scripts in `scripts/`.*
 
 ### 4. Local Web Server
 
@@ -203,7 +203,7 @@ MetaForge/
 ├── docs/
 │   └── assets/                  # Documentation figures & interface previews
 ├── notebooks/
-│   └── HEA_Exploration.ipynb    # Interactive combinatorial & ML prototyping notebook
+│   └── HEA_Exploration.ipynb    # May 2026 prototype, superseded (see the note inside)
 ├── MetaForge-Web/               # Production Flask + React Web Application
 │   ├── models/                  # Pretrained Random Forest regressor weights (.model)
 │   ├── templates/               # Responsive single-page interface with 3Dmol.js viewer
