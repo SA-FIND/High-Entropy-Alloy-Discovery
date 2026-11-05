@@ -59,3 +59,7 @@ archive/
 RESEARCH_PROPOSAL*
 *[Rr]esearch_[Pp]roposal*
 proposal/
+
+# Output of run_master.py (proxy-model scores, not results)
+run_master_log.txt
+run_master_err.txt
