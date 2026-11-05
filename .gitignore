@@ -63,3 +63,6 @@ proposal/
 # Output of run_master.py (proxy-model scores, not results)
 run_master_log.txt
 run_master_err.txt
+
+# Empty stderr captures from long runs
+results/*_err.txt

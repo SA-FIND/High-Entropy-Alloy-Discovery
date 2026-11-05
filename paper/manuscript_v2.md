@@ -2,7 +2,7 @@
 
 Solomon Ahedor
 
-Department of Materials Engineering, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana. Correspondence: ahedorsolomon@gmail.com
+Department of Materials and Metallurgical Engineering, Kwame Nkrumah University of Science and Technology, Kumasi, Ghana. Correspondence: ahedorsolomon@gmail.com
 
 <!-- Draft v2, 2026-10-17. Every number comes from committed files in results/. Remaining for the author: confirm the AI declaration and CRediT roles; decide co-authorship. -->
 
