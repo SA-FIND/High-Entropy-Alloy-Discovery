@@ -66,7 +66,7 @@ graph TD
 
 ## Status (October 2026)
 
-The research now covers refractory BCC alloys of Ti, Zr, Hf, V, Nb, Ta, Cr, Mo and W, and the manuscript is complete ([`paper/manuscript_v2.md`](paper/manuscript_v2.md)). A hybrid of edge-dislocation theory and machine learning predicts yield strength from 25 to 1600 °C, with R² = 0.65 on alloys published after the training data. Universal ML potentials give accurate lattice parameters, but their shear constants are too soft to use as inputs to the theory. The verification log is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
+The research now covers refractory BCC alloys of Ti, Zr, Hf, V, Nb, Ta, Cr, Mo and W, and the manuscript is complete ([`paper/manuscript_v2.md`](paper/manuscript_v2.md)). A hybrid of edge-dislocation theory and machine learning predicts yield strength from −269 to 1600 °C, with R² = 0.65 on alloys published after the training data. Universal ML potentials give accurate lattice parameters, but their shear constants are too soft to use as inputs to the theory. The verification log is in [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
 
 The four candidate alloys listed here before October 2026 came from an analytical strength proxy and a genetic algorithm that broke the 5-35 at.% bounds, and they are withdrawn. The web app still offers all four alloy families and warns where measured data are sparse.
 
