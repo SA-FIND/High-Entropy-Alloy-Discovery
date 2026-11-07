@@ -55,7 +55,7 @@ data/external/**/*.csv
 # Retired material, kept locally only
 archive/
 
-# Research proposals: shared privately on request (see README, "Research proposal")
+# Research proposals: shared privately on request (see the README)
 RESEARCH_PROPOSAL*
 *[Rr]esearch_[Pp]roposal*
 proposal/
@@ -69,3 +69,6 @@ results/*_err.txt
 
 # Manuscript: kept local until publication
 paper/manuscript*.md
+
+# Internal planning notes: kept local
+docs/PUBLICATION_PLAN.md

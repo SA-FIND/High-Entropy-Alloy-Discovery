@@ -7,9 +7,12 @@ Cr, Mo, W; the caller falls back to other models otherwise.
 """
 import numpy as np
 import joblib
+from pymatgen.core import Element
 
 from metaforge_core.phase import violating_pairs
-from metaforge_core.strength_edge import predict_rom
+from metaforge_core.strength_edge import ELEMENTS_LEE2021, predict_rom
+
+AMU_PER_A3_TO_G_CM3 = 1.66053906660
 
 
 class RefractoryHybrid:
@@ -35,16 +38,23 @@ class RefractoryHybrid:
         hi = phys + float(self.q_hi.predict(x)[0]) + self.qhat
         return point, max(lo, 0.0), hi
 
+    def density(self, fractions):
+        """Rule-of-mixtures density in g/cm3, the same calculation as scripts/design_nsga2.py."""
+        f = {el: c for el, c in fractions.items() if c > 0}
+        m = sum(c * Element(el).atomic_mass for el, c in f.items())
+        v = sum(c * ELEMENTS_LEE2021[el][0] for el, c in f.items())
+        return float(m / v * AMU_PER_A3_TO_G_CM3)
+
     def warnings(self, fractions, mag):
         """Plain-language reasons to distrust a prediction (empty list if none)."""
         f = {el: c for el, c in fractions.items() if c > 0}
         out = []
         pairs = violating_pairs(f, self.pair_caps)
         if pairs:
-            out.append("Element pairs " + ", ".join(pairs) + " exceed any reported single-phase BCC alloy "
-                       "(possible Laves or other second phases)")
+            out.append("No single-phase BCC alloy has been reported with this much " + ", ".join(pairs)
+                       + ", so expect Laves or other second phases")
         if self._distance(mag, self.Z) > self.doa_threshold:
-            out.append("Composition is far from all measured alloys")
+            out.append("This composition is far from every measured alloy, so treat the numbers as a rough guess")
         if self._distance(mag, self.Z_hot) > self.doa_threshold:
-            out.append("No similar alloy has been tested at >= 900 C; the 1000 C value is an extrapolation")
+            out.append("No similar alloy has been tested at 900 °C or above, so the 1000 °C value is an extrapolation")
         return out

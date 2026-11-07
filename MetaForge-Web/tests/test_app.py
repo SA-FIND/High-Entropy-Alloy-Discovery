@@ -18,7 +18,7 @@ def test_home_page(client):
     """Test that the frontend serves correctly."""
     response = client.get('/')
     assert response.status_code == 200
-    assert b"Computational Materials Intelligence" in response.data
+    assert b"refractory high-entropy alloy" in response.data
 
 def test_predict_endpoint_valid_aerospace(client):
     """Test the /predict API with valid, standard composition for Aerospace."""
@@ -71,6 +71,16 @@ def test_refractory_uses_hybrid_model_with_intervals(client):
     assert lo <= data['strength_1000C'] <= hi
     assert 0.3 < data['strength_1000C'] < 0.9
     assert data['strength_source'].startswith('Hybrid model')
+
+
+def test_refractory_page_payload_uses_rule_of_mixtures_density(client):
+    """The page sends all nine elements; the design candidate's density must match design_pareto.csv (7.77)."""
+    comp = {'Ti': 22.6, 'Zr': 22.4, 'Hf': 13.1, 'V': 21.3, 'Nb': 0, 'Ta': 0, 'Cr': 0, 'Mo': 20.6, 'W': 0}
+    data = json.loads(client.post('/predict', json={"category": "Refractory Alloy", "elements": comp}).data)
+    assert abs(data['density'] - 7.77) < 0.02
+    assert 'energy' not in data
+    lo, hi = data['score_1000C_interval']
+    assert lo <= data['score_1000C'] <= hi
 
 
 def test_refractory_flags_laves_forming_pairs(client):

@@ -231,17 +231,19 @@ def predict():
             rt, rt_lo, rt_hi = refractory_hybrid.predict(comp_dict, features, 25.0)
             ht, ht_lo, ht_hi = refractory_hybrid.predict(comp_dict, features, 1000.0)
             strength = rt / 1000.0
-            strength_source = (f"Hybrid model: edge-dislocation theory + ML correction, 72 measured BCC alloys. "
-                               f"90% interval {rt_lo / 1000:.2f}-{rt_hi / 1000:.2f} GPa at 25 C; "
-                               f"at 1000 C {ht / 1000:.2f} GPa ({ht_lo / 1000:.2f}-{ht_hi / 1000:.2f})")
+            density = refractory_hybrid.density(comp_dict)
+            strength_source = ("Hybrid model: Maresca-Curtin edge-dislocation theory plus a correction "
+                               "trained on 277 measured yield strengths of 72 BCC alloys")
             notes = refractory_hybrid.warnings(comp_dict, features)
             if ht > refractory_hybrid.ys_max_hot_MPa:
-                notes.append(f"1000 C value exceeds the strongest alloy measured at >= 900 C "
+                notes.append(f"The 1000 °C value is above the strongest alloy ever measured at 900 °C or above "
                              f"({refractory_hybrid.ys_max_hot_MPa:.0f} MPa)")
             coverage_warning = "; ".join(notes) + "." if notes else None
             hybrid = {'strength_25C_interval': [round(rt_lo / 1000, 3), round(rt_hi / 1000, 3)],
                       'strength_1000C': round(ht / 1000, 3),
-                      'strength_1000C_interval': [round(ht_lo / 1000, 3), round(ht_hi / 1000, 3)]}
+                      'strength_1000C_interval': [round(ht_lo / 1000, 3), round(ht_hi / 1000, 3)],
+                      'score_1000C': round(ht / 1000 / density, 4),
+                      'score_1000C_interval': [round(ht_lo / 1000 / density, 4), round(ht_hi / 1000 / density, 4)]}
         elif measured_strength is not None:
             strength = measured_strength.predict([features])[0]
             counts = measured_meta.get('element_counts', {})
@@ -268,7 +270,8 @@ def predict():
         if hybrid:
             res.update(hybrid)
 
-        if ml_energy is not None:
+        # The energy surrogate was trained on W-Mo-Ta-Nb-V only, so it is not shown for the hybrid model.
+        if ml_energy is not None and not hybrid:
             energy = ml_energy.predict([features])[0]
             res['energy'] = round(float(energy), 3)
             

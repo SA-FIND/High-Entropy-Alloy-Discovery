@@ -12,7 +12,7 @@ Property model note:
   Density and strength targets are RoM analytical proxies, not experimental
   or DFT values. LinearRegression sanity check confirms these are recoverable
   from Magpie features. The validation roadmap is in the research proposal,
-  available on request (see README, "Research proposal").
+  available on request (see the README).
 """
 
 # Imports

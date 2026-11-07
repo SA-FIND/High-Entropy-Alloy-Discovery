@@ -4,821 +4,523 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Computational Materials Intelligence: Predict High Entropy Alloy properties such as density and shear strength using ML and Matminer features.">
-    <meta name="keywords"
-        content="materials science, HEA, high entropy alloy, machine learning, prediction, density, shear strength, MetaForge">
-    
-    <!-- Favicon -->
+    <meta name="description" content="Predict the yield strength of refractory high-entropy alloys (Ti, Zr, Hf, V, Nb, Ta, Cr, Mo, W) at 25 and 1000 &deg;C, with 90% intervals. Built by Solomon Ahedor.">
+    <meta name="keywords" content="refractory high-entropy alloy, yield strength, Maresca-Curtin, machine learning, MetaForge">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="alternate icon" href="/static/favicon.ico">
     <link rel="apple-touch-icon" href="/static/favicon.png">
-
-    <!-- Open Graph / Social Meta Tags -->
     <meta property="og:title" content="MetaForge">
-    <meta property="og:description" content="Computational Materials Intelligence: Predict High Entropy Alloy properties using ML and Matminer features.">
+    <meta property="og:description" content="Predict the yield strength of refractory high-entropy alloys (Ti, Zr, Hf, V, Nb, Ta, Cr, Mo, W) at 25 and 1000 &deg;C, with 90% intervals. Built by Solomon Ahedor.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="MetaForge">
-    <meta name="twitter:description" content="Computational Materials Intelligence: Predict High Entropy Alloy properties using ML and Matminer features.">
-
-    <title>MetaForge</title>
-    
+    <meta name="twitter:description" content="Predict the yield strength of refractory high-entropy alloys (Ti, Zr, Hf, V, Nb, Ta, Cr, Mo, W) at 25 and 1000 &deg;C, with 90% intervals. Built by Solomon Ahedor.">
+    <title>MetaForge: refractory alloy strength</title>
     <link rel="canonical" href="https://metaforge-web.onrender.com/">
-    
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "MetaForge",
       "url": "https://metaforge-web.onrender.com/",
-      "description": "Computational Materials Intelligence: Predict High Entropy Alloy properties such as density and shear strength using ML and Matminer features.",
+      "description": "Predict the yield strength of refractory high-entropy alloys at 25 and 1000 °C, with 90% intervals.",
       "applicationCategory": "ScienceApplication",
       "operatingSystem": "All"
     }
     </script>
 
+    <!-- Theme and lite mode are set before first paint, so the page never flashes the wrong look -->
+    <script>
+        (function () {
+            var d = document.documentElement;
+            try { if (localStorage.getItem('metaforge-theme') === 'light') d.classList.add('light'); } catch (e) {}
+            var lowMem = navigator.deviceMemory && navigator.deviceMemory <= 2;
+            var saveData = navigator.connection && navigator.connection.saveData;
+            var oldEngine = !(window.CSS && CSS.supports && CSS.supports('color', 'color-mix(in srgb, red, blue)'));
+            var q = location.search;
+            if ((lowMem || saveData || oldEngine || /[?&]lite\b/.test(q)) && !/[?&]full\b/.test(q)) d.classList.add('lite');
+        })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
-        rel="stylesheet">
-    <!-- 3Dmol.js: Local high-speed delivery with official CDN fallbacks -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,700..900&family=Inter:wght@400..700&family=Roboto+Mono:wght@500;600&display=swap">
     <script src="/static/js/3Dmol-min.js"></script>
     <script>window.$3Dmol || document.write('<script src="https://3Dmol.org/build/3Dmol-min.js"><\/script>')</script>
     <script>window.$3Dmol || document.write('<script src="https://cdn.jsdelivr.net/npm/3dmol@2.4.2/build/3Dmol-min.js"><\/script>')</script>
 
     <style>
-        /* ═══════════════════════════════════════════════
-           DESIGN TOKENS — DARK THEME (default)
-           ═══════════════════════════════════════════════ */
+        /* Liquid glass, the same system as my portfolio: flat translucent panels over a grain texture.
+           No gradient fills, glow shadows or ambient orbs. */
         :root {
-            --bg-deep: #050508;
-            --bg-surface: rgba(18, 18, 20, 0.5);
-            --bg-card: rgba(24, 24, 27, 0.3);
-            --border-subtle: rgba(255, 255, 255, 0.08);
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-display: 'Archivo', 'Inter', sans-serif;
+            --font-mono: 'Roboto Mono', ui-monospace, monospace;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-
-            --accent-blue: #3b82f6;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --accent-amber: #f59e0b;
-            --accent-violet: #8b5cf6;
-
-            --el-al: #3b82f6;
-            --el-ti: #8b5cf6;
-            --el-sc: #10b981;
-            --el-zr: #f59e0b;
-            --el-v: #ef4444;
-
-            --font-sans: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --bg: #0b0e12;
+            --text: #e9edf1;
+            --muted: #a3adb8;
+            --rule: rgba(255, 255, 255, 0.09);
+            --panel: rgba(255, 255, 255, 0.05);
+            --panel-raised: rgba(255, 255, 255, 0.08);
+            --panel-solid: #151a20;
+            --border: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.22);
+            --rim: rgba(255, 255, 255, 0.22);
+            --shade: rgba(0, 0, 0, 0.35);
+            --gold: #d9ad3c;
+            --gold-ink: #1c1504;
+            --gold-text: #e3bb55;
+            --focus: rgba(217, 173, 60, 0.7);
+            --warn: #f4a46a;
+            --warn-fill: rgba(244, 164, 106, 0.08);
+            --warn-border: rgba(244, 164, 106, 0.3);
+            --shadow-panel: 0 18px 44px -18px rgba(0, 0, 0, 0.75), 0 1px 3px rgba(0, 0, 0, 0.4);
+            color-scheme: dark;
         }
 
-        /* ═══════════════════════════════════════════════
-           LIGHT THEME
-           ═══════════════════════════════════════════════ */
-        :root.light {
-            --bg-deep: #eef2f6;
-            --bg-surface: rgba(255, 255, 255, 0.5);
-            --bg-card: rgba(255, 255, 255, 0.3);
-            --border-subtle: rgba(255, 255, 255, 0.6);
-
-            --text-primary: #111827;
-            --text-secondary: #4b5563;
-            --text-muted: #9ca3af;
-
-            --glow-blue: rgba(59, 130, 246, 0.2);
-            --glow-green: rgba(16, 185, 129, 0.2);
+        html.light {
+            --bg: #e4e6e3;
+            --text: #14181c;
+            --muted: #4a525a;
+            --rule: rgba(20, 24, 28, 0.1);
+            --panel: rgba(255, 255, 255, 0.55);
+            --panel-raised: rgba(255, 255, 255, 0.75);
+            --panel-solid: #f3f4f2;
+            --border: rgba(20, 24, 28, 0.1);
+            --border-hover: rgba(20, 24, 28, 0.2);
+            --rim: rgba(255, 255, 255, 0.95);
+            --shade: rgba(20, 24, 28, 0.06);
+            --gold: #d4a42c;
+            --gold-text: #7a5a0c;
+            --focus: rgba(122, 90, 12, 0.6);
+            --warn: #9a3f0a;
+            --warn-fill: rgba(154, 63, 10, 0.06);
+            --warn-border: rgba(154, 63, 10, 0.25);
+            --shadow-panel: 0 18px 40px -18px rgba(20, 24, 28, 0.25), 0 1px 3px rgba(20, 24, 28, 0.06);
+            color-scheme: light;
         }
 
-        /* ═══════════════════════════════════════════════
-           RESET & BASE
-           ═══════════════════════════════════════════════ */
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { margin: 0; }
         body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-deep);
-            color: var(--text-primary);
             min-height: 100vh;
-            position: relative;
+            background: var(--bg);
+            color: var(--text);
+            font: 400 15px/1.55 var(--font);
+            -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
-            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
+        #grain { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; pointer-events: none; }
 
-        /* ═══════════════════════════════════════════════
-           FADE-IN ANIMATIONS
-           ═══════════════════════════════════════════════ */
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(24px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .app-container { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: clamp(16px, 4vw, 40px); }
+
+        /* Glass surfaces */
+        .card, .tab-btn, .theme-toggle, .donut-tooltip {
+            background: var(--panel);
+            -webkit-backdrop-filter: blur(22px) saturate(170%);
+            backdrop-filter: blur(22px) saturate(170%);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-panel), inset 0 1px 0 var(--rim), inset 0 -1px 0 var(--shade);
         }
-
-        .animate-in {
-            opacity: 0;
-            animation: fadeSlideUp 0.6s ease forwards;
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            .card, .tab-btn, .theme-toggle, .donut-tooltip { background: var(--panel-solid); }
         }
-
-        .animate-in-delay-1 { animation-delay: 0.1s; }
-        .animate-in-delay-2 { animation-delay: 0.2s; }
-        .animate-in-delay-3 { animation-delay: 0.3s; }
-        .animate-in-delay-4 { animation-delay: 0.4s; }
-
-        /* ═══════════════════════════════════════════════
-           LAYOUT
-           ═══════════════════════════════════════════════ */
-        .app-container {
-            max-width: 1240px;
-            margin: 0 auto;
-            padding: 16px 20px 8px;
+        html.lite .card, html.lite .tab-btn, html.lite .theme-toggle, html.lite .donut-tooltip {
+            -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--panel-solid);
         }
+        html.lite #grain { display: none; }
 
-        /* ═══════════════════════════════════════════════
-           HEADER
-           ═══════════════════════════════════════════════ */
-        .header {
-            text-align: center;
-            margin-bottom: 12px;
-            position: relative;
-        }
-
-        .header__title {
-            font-size: 1.65rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-            color: var(--text-primary);
-            letter-spacing: -0.02em;
-        }
-
-        .header__subtitle {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            max-width: 650px;
-            margin: 0 auto;
-            line-height: 1.4;
-        }
-
-        /* ═══════════════════════════════════════════════
-           THEME TOGGLE
-           ═══════════════════════════════════════════════ */
-        .theme-toggle {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            background: var(--border-subtle);
-            transform: rotate(20deg);
-        }
-
-        /* ═══════════════════════════════════════════════
-           GRID
-           ═══════════════════════════════════════════════ */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        /* ═══════════════════════════════════════════════
-           CARDS
-           ═══════════════════════════════════════════════ */
-        .card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            padding: 16px 20px;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.2);
-            transition: all 0.4s ease;
-        }
-
-        .card:hover {
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 12px 40px rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
+        .card { border-radius: 20px; padding: 22px; }
         .card__title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 8px;
+            margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--rule);
+            font: 800 1.02rem/1.2 var(--font-display); font-stretch: 112%; letter-spacing: 0.01em;
         }
 
-        .card-header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 8px;
+        /* Header */
+        .header { position: relative; text-align: center; padding: 6px 56px 0; }
+        .header__title {
+            margin: 0; font: 900 clamp(2.1rem, 6vw, 3.2rem)/1 var(--font-display); font-stretch: 125%; letter-spacing: 0.01em;
         }
-
-        .card-header-flex .card__title {
-            margin-bottom: 0;
-            border-bottom: none;
-            padding-bottom: 0;
+        .header__subtitle { max-width: 620px; margin: 12px auto 0; color: var(--muted); font-size: 1rem; }
+        .theme-toggle {
+            position: absolute; top: 0; right: 0; width: 46px; height: 46px; border-radius: 14px;
+            display: grid; place-items: center; color: var(--text); cursor: pointer;
+            transition: border-color 0.2s var(--ease);
         }
+        .theme-toggle:hover { border-color: var(--border-hover); }
+        .theme-toggle svg { width: 20px; height: 20px; }
+        .theme-toggle .sun { display: none; }
+        html.light .theme-toggle .sun { display: block; }
+        html.light .theme-toggle .moon { display: none; }
 
-        .autobalance-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid var(--border-subtle);
-            background: var(--bg-surface);
-            color: var(--text-muted);
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .autobalance-btn:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            color: var(--text-primary);
-        }
-
-        .autobalance-btn.active {
-            border-color: rgba(59, 130, 246, 0.4);
-            background: rgba(59, 130, 246, 0.12);
-            color: var(--accent-blue);
-        }
-
-        .autobalance-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: var(--text-muted);
-            transition: background-color 0.2s ease;
-        }
-
-        .autobalance-btn.active .autobalance-dot {
-            background-color: var(--accent-blue);
-            box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
-        }
-
-        /* ═══════════════════════════════════════════════
-           CATEGORY TABS
-           ═══════════════════════════════════════════════ */
-        .category-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
+        /* Presets */
+        .category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px 0; }
         .tab-btn {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-secondary);
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            font-weight: 600;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            transition: all 0.25s ease;
+            min-height: 40px; padding: 0 16px; border-radius: 14px; color: var(--text); cursor: pointer;
+            font: 600 0.9rem/1 var(--font); transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
         }
+        .tab-btn:hover { border-color: var(--border-hover); }
+        .tab-btn:active { transform: translateY(1px); }
+        .tab-btn.active { background: var(--gold); color: var(--gold-ink); border-color: transparent; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
 
-        .tab-btn.active {
-            background-color: var(--text-primary);
-            color: var(--bg-deep);
-            border-color: var(--text-primary);
-        }
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-        .tab-btn:hover:not(.active) {
-            background-color: var(--border-subtle);
-            color: var(--text-primary);
-            transform: translateY(-1px);
-        }
+        .note { font-size: 0.8rem; color: var(--muted); margin: 4px 0 10px; line-height: 1.5; }
 
-        /* ═══════════════════════════════════════════════
-           SLIDERS
-           ═══════════════════════════════════════════════ */
-        .slider-group {
-            margin-bottom: 8px;
-        }
-
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3px;
-        }
-
-        .el-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-            font-size: 0.82rem;
-        }
-
-        .el-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: transform 0.2s ease;
-        }
-
-        .slider-group:hover .el-dot {
-            transform: scale(1.3);
-        }
-
-        .input-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
+        /* Composition */
+        .slider-group { margin: 10px 0 12px; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .el-label { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .el-name { color: var(--muted); font-size: 0.85rem; font-weight: 400; }
+        .el-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+        .input-group { display: flex; align-items: center; gap: 10px; }
         .input-group input[type="number"] {
-            width: 48px;
-            padding: 2px 4px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-size: 0.78rem;
-            border-radius: 4px;
-            text-align: center;
-            transition: border-color 0.2s ease;
+            width: 66px; height: 30px; border-radius: 10px; border: 1px solid var(--border);
+            background: var(--panel-raised); color: var(--text); text-align: center; font: 500 0.85rem var(--font-mono);
         }
-
-        .input-group input[type="number"]:focus-visible {
-            outline: none;
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px var(--glow-blue);
-        }
-
-        .normalized-val {
-            font-family: var(--font-mono);
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            min-width: 40px;
-            text-align: right;
-            font-variant-numeric: tabular-nums;
-        }
-
+        .normalized-val { width: 52px; text-align: right; color: var(--muted); font: 500 0.8rem var(--font-mono); font-variant-numeric: tabular-nums; }
         input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 5px;
-            background: var(--border-subtle);
-            border-radius: 3px;
-            outline: none;
-            transition: background 0.2s ease;
+            -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 4px; border-radius: 999px;
+            background: var(--rule); outline: none; margin: 0;
         }
-
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+            background: var(--gold); border: 2px solid var(--bg); cursor: pointer;
         }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+        input[type="range"]::-moz-range-thumb {
+            width: 14px; height: 14px; border-radius: 50%; background: var(--gold); border: 2px solid var(--bg); cursor: pointer;
         }
+        input:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-        input[type="range"]:active::-webkit-slider-thumb {
-            transform: scale(1.3);
-        }
-
-        input[type="range"]:focus-visible::-webkit-slider-thumb {
-            outline: 2px solid var(--accent-blue);
-            outline-offset: 2px;
-        }
-
-        /* ═══════════════════════════════════════════════
-           DONUT CHART
-           ═══════════════════════════════════════════════ */
-        .donut-section {
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border-subtle);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .donut-svg {
-            width: 82px;
-            height: 82px;
-            transform: rotate(-90deg);
-            flex-shrink: 0;
-        }
-
-        .donut-svg circle {
-            transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
-        }
-
-        .donut-legend {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            font-size: 0.74rem;
-            color: var(--text-secondary);
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Donut tooltip */
+        .donut-section { display: flex; align-items: center; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rule); }
+        .donut-svg { width: 96px; height: 96px; transform: rotate(-90deg); flex: none; }
+        .donut-svg circle { transition: stroke-dasharray 0.4s var(--ease), stroke-dashoffset 0.4s var(--ease); }
+        .donut-legend { display: grid; grid-template-columns: repeat(2, auto); gap: 4px 16px; font: 500 0.78rem var(--font-mono); color: var(--muted); }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
         .donut-tooltip {
-            position: fixed;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-family: var(--font-mono);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.15s ease;
-            z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            position: fixed; z-index: 10; padding: 6px 10px; border-radius: 10px; pointer-events: none;
+            opacity: 0; transition: opacity 0.15s; font: 500 0.78rem var(--font-mono); color: var(--text);
         }
 
-        .viewer-mode-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-muted);
-            font-size: 0.68rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            font-family: var(--font-sans);
-        }
-        .viewer-mode-btn:hover {
-            color: var(--text-primary);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        .viewer-mode-btn--active {
-            background: rgba(59, 130, 246, 0.15);
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-            font-weight: 600;
-        }
-
-        /* ═══════════════════════════════════════════════
-           RESULTS
-           ═══════════════════════════════════════════════ */
-        .results-stack {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
+        /* Prediction */
+        .results-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .result-tile {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            padding: 8px 12px;
-            border-radius: 10px;
-            text-align: center;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            border-radius: 14px; padding: 12px 14px; background: var(--panel-raised); border: 1px solid var(--border);
+            box-shadow: inset 0 1px 0 var(--rim); transition: opacity 0.2s;
+        }
+        .result-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .result-value { margin-top: 6px; font: 600 1.55rem/1.1 var(--font-mono); color: var(--text); font-variant-numeric: tabular-nums; }
+        .result-unit { margin-left: 6px; font: 500 0.75rem var(--font); color: var(--muted); }
+        .result-tile--score .result-value { color: var(--gold-text); }
+        .sub { margin-top: 6px; font: 500 0.72rem var(--font-mono); color: var(--muted); }
+        .warn {
+            margin-top: 12px; padding: 10px 12px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5;
+            color: var(--warn); background: var(--warn-fill); border: 1px solid var(--warn-border);
         }
 
-        .result-tile:hover {
-            transform: translateY(-1px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 6px 20px rgba(0,0,0,0.15);
-            border-color: rgba(255, 255, 255, 0.15);
+        .lattice { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rule); }
+        .lattice__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .lattice__view {
+            position: relative; height: 230px; width: 100%; overflow: hidden; border-radius: 14px;
+            background: var(--panel); border: 1px solid var(--border);
         }
+        .link-btn { background: none; border: none; padding: 0; cursor: pointer; color: var(--gold-text); font: 600 0.78rem var(--font); }
 
-        .result-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-secondary);
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        /* About */
+        .info { margin-top: 18px; }
+        .info .card__title + p { margin-top: 0; }
+        .info h2:not(:first-child) { margin-top: 18px; }
+        .info p { margin: 0 0 10px; color: var(--muted); font-size: 0.92rem; line-height: 1.7; }
+        .info p:last-child { margin-bottom: 0; }
+
+        .app-footer { margin: 26px 0 6px; text-align: center; color: var(--muted); font-size: 0.82rem; }
+        .app-footer a { color: var(--gold-text); text-decoration: none; font-weight: 600; }
+        .app-footer a:hover { text-decoration: underline; }
+
+        .loading-bar { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: var(--gold); opacity: 0; transition: opacity 0.2s; z-index: 20; }
+
+        /* Entrance: plays once on load */
+        .animate-in { animation: rise 0.6s var(--ease) both; }
+        .animate-in-delay-1 { animation-delay: 0.06s; }
+        .animate-in-delay-2 { animation-delay: 0.12s; }
+        .animate-in-delay-3 { animation-delay: 0.18s; }
+        .animate-in-delay-4 { animation-delay: 0.24s; }
+        @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) {
+            .card { padding: 18px 16px; }
+            .results-stack { grid-template-columns: 1fr; }
+            .header { padding: 56px 0 0; }
+            .donut-section { flex-direction: column; align-items: flex-start; }
         }
-
-        .result-value {
-            font-family: var(--font-mono);
-            font-size: 1.3rem;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            transition: color 0.3s ease;
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
         }
-
-        .result-unit {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-left: 3px;
-        }
-
-        /* Value colors */
-        .val-density { color: var(--accent-red); }
-        .val-strength { color: var(--accent-green); }
-        .val-score { color: var(--accent-blue); }
-
-        /* Score tile special glow */
-        .result-tile--score {
-            border-color: var(--border-subtle);
-            background-color: var(--bg-deep);
-        }
-
-        /* ═══════════════════════════════════════════════
-           LOADING BAR
-           ═══════════════════════════════════════════════ */
-        .loading-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--text-primary);
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 1000;
-        }
-
-        /* ═══════════════════════════════════════════════
-           FOOTER
-           ═══════════════════════════════════════════════ */
-        .app-footer {
-            text-align: center;
-            padding: 12px 16px 8px;
-            margin-top: 14px;
-            border-top: 1px solid var(--border-subtle);
-            color: var(--text-muted);
-            font-size: 0.72rem;
-            line-height: 1.4;
-        }
-
-        .app-footer a {
-            color: var(--accent-blue);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        .app-footer a:hover {
-            color: var(--accent-violet);
-            text-decoration: underline;
-        }
-
-        /* ═══════════════════════════════════════════════
-           RESPONSIVE
-           ═══════════════════════════════════════════════ */
-        @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .header__title {
-                font-size: 1.75rem;
-            }
-
-            .header__subtitle {
-                font-size: 0.9rem;
-            }
-
-            .category-tabs {
-                gap: 8px;
-            }
-
-            .tab-btn {
-                padding: 8px 12px;
-                font-size: 0.78rem;
-            }
-
-            .donut-section {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .donut-svg {
-                align-self: center;
-            }
-
-            .donut-legend {
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 12px;
-                justify-content: center;
-                width: 100%;
-            }
-
-            .result-value {
-                font-size: 1.6rem;
-            }
-
-            .theme-toggle {
-                position: static;
-                margin: 0 auto 16px;
-            }
-
-            .header {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .card {
-                padding: 24px;
-            }
-
-            .app-container {
-                padding: 24px 16px 16px;
-            }
+        @media (prefers-contrast: more) {
+            .card, .tab-btn, .theme-toggle { background: var(--panel-solid); }
         }
     </style>
 </head>
 
 <body>
     <noscript>
-        <div style="background: #ef4444; color: white; padding: 12px; text-align: center; font-weight: bold;">
-            JavaScript is required to run the MetaForge UI. Please enable it in your browser settings.
+        <div style="background: #9a3f0a; color: white; padding: 12px; text-align: center; font-weight: 600;">
+            MetaForge needs JavaScript to run.
         </div>
     </noscript>
 
+    <canvas id="grain" aria-hidden="true"></canvas>
     <div class="loading-bar" id="loadingBar"></div>
-
-    <!-- Donut tooltip element -->
     <div class="donut-tooltip" id="donutTooltip"></div>
 
     <main class="app-container">
         <header class="header animate-in">
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">🌙</button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Switch between dark and light" title="Switch theme">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+            </button>
             <h1 class="header__title">MetaForge</h1>
-            <p class="header__subtitle">Computational Materials Intelligence · High-Entropy Alloy Discovery</p>
+            <p class="header__subtitle">How strong is a refractory high-entropy alloy at 25 &deg;C and at 1000 &deg;C? Set a composition and see what my model predicts.</p>
         </header>
-        <div class="category-tabs animate-in animate-in-delay-1" id="categoryTabs"></div>
+
+        <div class="category-tabs animate-in animate-in-delay-1" id="presets" aria-label="Start from a known alloy"></div>
+
         <div class="main-grid">
             <div class="card animate-in animate-in-delay-2">
-                <h2 class="card__title">Alloy Composition</h2>
+                <h2 class="card__title">Composition</h2>
+                <p class="note">Any mix of these nine elements. The numbers are rescaled to add up to 100%.</p>
                 <div id="sliders-container"></div>
-
                 <div class="donut-section">
-                    <svg class="donut-svg" viewBox="0 0 32 32" id="donutChart" aria-hidden="true"></svg>
+                    <svg class="donut-svg" viewBox="-3 -3 38 38" id="donutChart" aria-hidden="true"></svg>
                     <div class="donut-legend" id="donutLegend"></div>
                 </div>
             </div>
 
             <div class="card animate-in animate-in-delay-3">
-                <h2 class="card__title">ML Predictions</h2>
+                <h2 class="card__title">Prediction</h2>
                 <div class="results-stack">
                     <div class="result-tile">
-                        <div class="result-label">Predicted Density</div>
-                        <div class="result-value val-density"><span id="val-density">0.00</span><span
-                                class="result-unit">g/cm³</span></div>
+                        <div class="result-label">Yield strength at 25 &deg;C</div>
+                        <div class="result-value"><span id="val-rt">&ndash;</span><span class="result-unit">GPa</span></div>
+                        <div class="sub" id="int-rt"></div>
                     </div>
                     <div class="result-tile">
-                        <div class="result-label">Predicted Yield Strength (σ<sub>y</sub>)</div>
-                        <div class="result-value val-strength"><span id="val-strength">0.00</span><span
-                                class="result-unit">GPa</span></div>
-                        <div id="strength-source" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;"></div>
-                        <div id="strength-warning" style="font-size: 0.7rem; color: #f5a623; margin-top: 2px;"></div>
+                        <div class="result-label">Yield strength at 1000 &deg;C</div>
+                        <div class="result-value"><span id="val-ht">&ndash;</span><span class="result-unit">GPa</span></div>
+                        <div class="sub" id="int-ht"></div>
                     </div>
-                    <div class="result-tile" id="energyTile" style="display: none;">
-                        <div class="result-label">GNN Ground-State Energy (E)</div>
-                        <div class="result-value" style="color: var(--accent-green);"><span id="val-energy">0.000</span><span
-                                class="result-unit">eV/atom</span></div>
+                    <div class="result-tile">
+                        <div class="result-label">Density (rule of mixtures)</div>
+                        <div class="result-value"><span id="val-density">&ndash;</span><span class="result-unit">g/cm&sup3;</span></div>
                     </div>
                     <div class="result-tile result-tile--score" id="scoreTile">
-                        <div class="result-label" style="color: var(--text-primary);">Specific Yield Strength (σ<sub>y</sub>/ρ)</div>
-                        <div class="result-value val-score" style="color: var(--text-primary);"><span id="val-score">0.00</span><span
-                                class="result-unit">GPa·cm³/g</span></div>
+                        <div class="result-label">Strength per unit density at 1000 &deg;C</div>
+                        <div class="result-value"><span id="val-score">&ndash;</span><span class="result-unit">GPa&middot;cm&sup3;/g</span></div>
+                        <div class="sub" id="int-score"></div>
                     </div>
                 </div>
+                <div class="warn" id="warnings" hidden></div>
 
-                <!-- 3D SQS Crystal Structure Viewer -->
-                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <div class="result-label" style="margin: 0; font-weight: 600; color: var(--text-primary);">SQS Supercell</div>
-                        <div style="display: flex; gap: 4px; align-items: center;">
-                            <button id="modeBtnLive" class="viewer-mode-btn viewer-mode-btn--active" onclick="setViewerMode('live')" title="Dynamically populate atom sites based on current slider percentages">Live Atoms</button>
-                            <button id="modeBtnOptimal" class="viewer-mode-btn" onclick="setViewerMode('optimal')" title="Show the optimal SQS supercell (CHGNet-relaxed if available, otherwise the unrelaxed blueprint)">Optimal SQS</button>
-                            <span id="cifStatusBadge" style="font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); font-family: var(--font-mono); margin-left: 2px;">3D WebGL</span>
-                        </div>
+                <div class="lattice">
+                    <div class="lattice__head">
+                        <div class="result-label">What the lattice looks like</div>
+                        <button id="toggleSpinBtn" onclick="toggleSpin()" class="link-btn">Auto-rotate: On</button>
                     </div>
-                    <div id="crystalViewer" style="height: 220px; width: 100%; position: relative; border-radius: 8px; background: #07070a; border: 1px solid var(--border-subtle); overflow: hidden;"></div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                        <span id="latticeOccupancyText" style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">Sites: Initializing...</span>
-                        <button id="toggleSpinBtn" onclick="toggleSpin()" style="background: none; border: none; color: var(--accent-blue); font-size: 0.7rem; cursor: pointer; padding: 0;">Auto-rotate: On</button>
-                    </div>
+                    <div id="crystalViewer" class="lattice__view"></div>
+                    <p class="note" id="latticeOccupancyText">Loading...</p>
+                    <p class="note">A 54-site BCC cell filled with your composition. It's a picture to help you see the mix, not a relaxed structure.</p>
                 </div>
             </div>
         </div>
 
+        <section class="card info animate-in animate-in-delay-4">
+            <h2 class="card__title">How it works</h2>
+            <p>The prediction starts from Maresca and Curtin's edge-dislocation theory, which has no fitted parameters. I added a correction trained on 277 measured yield strengths of 72 single-phase BCC alloys, tested from &minus;269 to 1600 &deg;C (open MPEA dataset, Borg et al. 2020). On alloys first reported after the training data, the model gets R&sup2; = 0.65. The theory alone gets 0.10. The ranges under each number are 90% conformal intervals; on alloys the model had not seen, they held 84 to 88% of the measurements.</p>
+            <p>It only knows Ti, Zr, Hf, V, Nb, Ta, Cr, Mo and W, and it assumes the alloy stays single-phase BCC. A warning appears when your composition is far from what has been measured. Ti-Zr-V alloys lose most of their strength between 600 and 1000 &deg;C (NbTiVZr drops from 834 to 58 MPa), and the model can miss that, so read the 1000 &deg;C number for those alloys with care.</p>
+            <h2 class="card__title">What comes next</h2>
+            <p>Next, I want to make one of the Ti-Zr-Hf-V-Mo candidates and test it in compression between 600 and 1000 &deg;C. After that, I want to extend the model to corrosion-resistant and lightweight high-entropy alloys.</p>
+        </section>
+
         <footer class="app-footer animate-in animate-in-delay-4">
-            Built by <a href="https://github.com/SA-FIND" target="_blank" rel="noopener noreferrer">SA-FIND</a> · MIT License · Powered by
-            <a href="https://pymatgen.org/" target="_blank" rel="noopener noreferrer">Pymatgen</a>,
-            <a href="https://hackingmaterials.lbl.gov/matminer/" target="_blank" rel="noopener noreferrer">Matminer</a> &
-            <a href="https://scikit-learn.org/" target="_blank" rel="noopener noreferrer">scikit-learn</a>
+            Built by Solomon Ahedor &middot;
+            <a href="https://github.com/SA-FIND/High-Entropy-Alloy-Discovery" target="_blank" rel="noopener noreferrer">Code on GitHub</a> &middot; MIT License
         </footer>
     </main>
 
     <script>
-        // ═══════════════════════════════════════════════
-        // THEME TOGGLE
-        // ═══════════════════════════════════════════════
-        const themeToggle = document.getElementById('themeToggle');
-        const storedTheme = localStorage.getItem('metaforge-theme');
-        if (storedTheme === 'light') {
-            document.documentElement.classList.add('light');
-            themeToggle.textContent = '☀️';
-        }
+        // Background: the same recrystallization shader as my portfolio. Each grain nucleates at its own
+        // time and grows at a constant rate until it meets its neighbours, so the boundaries form a
+        // Johnson-Mehl tessellation, as in an annealed metal.
+        const grainBg = (function () {
+            const none = { redraw() {} };
+            const root = document.documentElement;
+            const canvas = document.getElementById('grain');
+            if (root.classList.contains('lite')) return none;
+            const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+            if (!gl) return none;  // the plain body colour shows instead
 
-        themeToggle.addEventListener('click', () => {
+            const VERT = 'attribute vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }';
+            const FRAG = `
+                #ifdef GL_FRAGMENT_PRECISION_HIGH
+                precision highp float;
+                #else
+                precision mediump float;
+                #endif
+                uniform float grain;   // mean grain size, device px
+                uniform float t;       // 0..1 recrystallized
+                uniform float dpr;
+                uniform vec3 base;
+                uniform vec3 line;
+                uniform float amp;     // grain-to-grain shade variation
+                const float V = 2.6;   // growth rate, cells per unit t
+                vec2 hash2(vec2 p) {
+                    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+                    return fract(sin(p) * 43758.5453);
+                }
+                float hash1(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 45758.5453); }
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / grain;
+                    uv.x *= 0.9;
+                    vec2 cell = floor(uv);
+                    vec2 f = fract(uv);
+                    float a1 = 1e3, a2 = 1e3;
+                    vec2 id1 = vec2(0.0);
+                    // 5x5, not 3x3: an early-nucleating grain can grow past its Voronoi neighbours
+                    for (int j = -2; j <= 2; j++)
+                    for (int i = -2; i <= 2; i++) {
+                        vec2 g = vec2(float(i), float(j));
+                        vec2 o = 0.15 + 0.7 * hash2(cell + g);
+                        float nucleation = 0.35 * hash1(cell + g + 5.3);
+                        float arrival = nucleation + length(g + o - f) / V;
+                        if (arrival < a1) { a2 = a1; a1 = arrival; id1 = cell + g; }
+                        else if (arrival < a2) { a2 = arrival; }
+                    }
+                    // Cold-worked matrix: faint bands along the rolling direction
+                    float band = hash1(vec2(0.0, floor(gl_FragCoord.y / (3.0 * dpr))));
+                    vec3 deformed = base + (band - 0.5) * amp * 0.7 - amp * 0.25;
+                    vec3 grainCol = base + (hash1(id1) - 0.5) * amp;
+                    float done = step(a1, t);
+                    vec3 col = mix(deformed, grainCol, done);
+                    // Boundaries exist only once both grains have arrived
+                    float edge = (a2 - a1) * V * grain * 0.5;
+                    float boundary = (1.0 - smoothstep(0.35 * dpr, 1.1 * dpr, edge)) * step(a2, t);
+                    // Moving recrystallization front
+                    float front = (1.0 - done) * (1.0 - smoothstep(0.0, 1.2 * dpr, (a1 - t) * V * grain));
+                    col = mix(col, line, max(boundary, 0.6 * front));
+                    gl_FragColor = vec4(col, 1.0);
+                }`;
+            // Must match --bg in the CSS above
+            const THEMES = {
+                dark: { base: [0.043, 0.055, 0.071], line: [0.115, 0.13, 0.15], amp: 0.018 },
+                light: { base: [0.894, 0.902, 0.89], line: [0.8, 0.81, 0.8], amp: 0.02 }
+            };
+            const compile = (type, src) => {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+                return s;
+            };
+            const prog = gl.createProgram();
+            try {
+                gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+                gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+                gl.linkProgram(prog);
+            } catch (e) {
+                return none;
+            }
+            gl.useProgram(prog);
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+            const loc = gl.getAttribLocation(prog, 'p');
+            gl.enableVertexAttribArray(loc);
+            gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+            const u = {};
+            ['grain', 't', 'dpr', 'base', 'line', 'amp'].forEach(n => u[n] = gl.getUniformLocation(prog, n));
+
+            const draw = (t, animating) => {
+                // Full-res fragments every frame would stall older GPUs during the 2.4 s run
+                const dpr = animating ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+                // Size to the tallest viewport so a mobile toolbar showing or hiding never reallocates the canvas
+                const cssH = Math.max(window.innerHeight, screen.height || 0);
+                const w = Math.round(window.innerWidth * dpr), h = Math.round(cssH * dpr);
+                if (canvas.width !== w || canvas.height !== h) {
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.style.height = cssH + 'px';
+                    gl.viewport(0, 0, w, h);
+                }
+                const theme = root.classList.contains('light') ? THEMES.light : THEMES.dark;
+                gl.uniform1f(u.grain, (window.innerWidth < 720 ? 52 : 74) * dpr);
+                gl.uniform1f(u.t, t);
+                gl.uniform1f(u.dpr, dpr);
+                gl.uniform3fv(u.base, theme.base);
+                gl.uniform3fv(u.line, theme.line);
+                gl.uniform1f(u.amp, theme.amp);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+            };
+
+            let frame = 0;
+            const finish = () => {
+                cancelAnimationFrame(frame);
+                frame = requestAnimationFrame(() => draw(1, false));
+            };
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                draw(1, false);
+            } else {
+                const start = performance.now();
+                const step = (now) => {
+                    const k = Math.min((now - start) / 2400, 1);
+                    if (k < 1) { draw(1 - Math.pow(1 - k, 2), true); frame = requestAnimationFrame(step); }
+                    else draw(1, false);
+                };
+                frame = requestAnimationFrame(step);
+            }
+
+            // Height-only changes under 140 px are the mobile toolbar; the canvas already covers them
+            let lastW = window.innerWidth, lastH = window.innerHeight;
+            window.addEventListener('resize', () => {
+                if (window.innerWidth === lastW && Math.abs(window.innerHeight - lastH) < 140) return;
+                lastW = window.innerWidth;
+                lastH = window.innerHeight;
+                finish();
+            });
+            return { redraw: finish };
+        })();
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
             const isLight = document.documentElement.classList.toggle('light');
-            themeToggle.textContent = isLight ? '☀️' : '🌙';
-            localStorage.setItem('metaforge-theme', isLight ? 'light' : 'dark');
+            try { localStorage.setItem('metaforge-theme', isLight ? 'light' : 'dark'); } catch (e) {}
+            grainBg.redraw();
         });
 
-        // ═══════════════════════════════════════════════
-        // ALLOY FAMILIES & STATE
-        // ═══════════════════════════════════════════════
-        const ALLOY_FAMILIES = {
-            "Aerospace Alloy": [
-                { sym: 'Al', name: 'Aluminium', color: '#3b82f6' },
-                { sym: 'Ti', name: 'Titanium', color: '#8b5cf6' },
-                { sym: 'Sc', name: 'Scandium', color: '#10b981' },
-                { sym: 'Zr', name: 'Zirconium', color: '#f59e0b' },
-                { sym: 'V', name: 'Vanadium', color: '#ef4444' }
-            ],
-            "Lightweight Alloy": [
-                { sym: 'Al', name: 'Aluminium', color: '#3b82f6' },
-                { sym: 'Mg', name: 'Magnesium', color: '#8b5cf6' },
-                { sym: 'Li', name: 'Lithium', color: '#10b981' },
-                { sym: 'Ti', name: 'Titanium', color: '#f59e0b' },
-                { sym: 'Zn', name: 'Zinc', color: '#ef4444' }
-            ],
-            "Refractory Alloy": [
-                { sym: 'W', name: 'Tungsten', color: '#3b82f6' },
-                { sym: 'Mo', name: 'Molybdenum', color: '#8b5cf6' },
-                { sym: 'Ta', name: 'Tantalum', color: '#10b981' },
-                { sym: 'Nb', name: 'Niobium', color: '#f59e0b' },
-                { sym: 'V', name: 'Vanadium', color: '#ef4444' }
-            ],
-            "Corrosion Resistance": [
-                { sym: 'Co', name: 'Cobalt', color: '#3b82f6' },
-                { sym: 'Cr', name: 'Chromium', color: '#8b5cf6' },
-                { sym: 'Fe', name: 'Iron', color: '#10b981' },
-                { sym: 'Ni', name: 'Nickel', color: '#f59e0b' },
-                { sym: 'Cu', name: 'Copper', color: '#ef4444' }
-            ]
-        };
+        // The nine elements the hybrid model was trained on
+        const CATEGORY = "Refractory Alloy";
+        const elements = [
+            { sym: 'Ti', name: 'Titanium', color: '#8b5cf6' },
+            { sym: 'Zr', name: 'Zirconium', color: '#f59e0b' },
+            { sym: 'Hf', name: 'Hafnium', color: '#ec4899' },
+            { sym: 'V', name: 'Vanadium', color: '#ef4444' },
+            { sym: 'Nb', name: 'Niobium', color: '#eab308' },
+            { sym: 'Ta', name: 'Tantalum', color: '#10b981' },
+            { sym: 'Cr', name: 'Chromium', color: '#14b8a6' },
+            { sym: 'Mo', name: 'Molybdenum', color: '#6366f1' },
+            { sym: 'W', name: 'Tungsten', color: '#3b82f6' }
+        ];
+        // Well-known measured alloys, plus one of my design candidates (results/design_pareto.csv)
+        const PRESETS = [
+            { label: 'MoNbTaW', comp: { Mo: 25, Nb: 25, Ta: 25, W: 25 } },
+            { label: 'HfNbTaTiZr', comp: { Hf: 20, Nb: 20, Ta: 20, Ti: 20, Zr: 20 } },
+            { label: 'NbTiVZr', comp: { Nb: 25, Ti: 25, V: 25, Zr: 25 } },
+            { label: 'Ti-Zr-Hf-V-Mo (my design candidate)', comp: { Ti: 22.6, Zr: 22.4, Hf: 13.1, V: 21.3, Mo: 20.6 } }
+        ];
 
-        let currentCategory = "Aerospace Alloy";
-        let elements = ALLOY_FAMILIES[currentCategory];
         let state = {};
+        let activePreset = 0;
         let resultsComp = {};
         let debounceTimer = null;
 
@@ -826,102 +528,57 @@
         const donutChart = document.getElementById('donutChart');
         const donutLegend = document.getElementById('donutLegend');
         const loadingBar = document.getElementById('loadingBar');
-        const tabsContainer = document.getElementById('categoryTabs');
         const donutTooltip = document.getElementById('donutTooltip');
         const scoreTile = document.getElementById('scoreTile');
 
-        // ═══════════════════════════════════════════════
-        // ANIMATED NUMBER COUNTER
-        // ═══════════════════════════════════════════════
-        function animateValue(element, start, end, duration, decimals = 2) {
-            const startTime = performance.now();
-            const diff = end - start;
-
-            function step(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                // Ease-out cubic
-                const eased = 1 - Math.pow(1 - progress, 3);
-                const current = start + diff * eased;
-                element.textContent = current.toFixed(decimals);
-                if (progress < 1) {
-                    requestAnimationFrame(step);
-                }
-            }
-            requestAnimationFrame(step);
-        }
-
-        // ═══════════════════════════════════════════════
-        // STATE INIT
-        // ═══════════════════════════════════════════════
-        function initState() {
+        function applyPreset(i) {
+            activePreset = i;
             state = {};
-            elements.forEach(el => state[el.sym] = 20);
+            elements.forEach(el => state[el.sym] = PRESETS[i].comp[el.sym] || 0);
+            renderPresets();
+            initUI();
         }
 
-        // ═══════════════════════════════════════════════
-        // TABS
-        // ═══════════════════════════════════════════════
-        function renderTabs() {
-            if (!tabsContainer) return;
-            tabsContainer.innerHTML = Object.keys(ALLOY_FAMILIES).map(cat =>
-                `<button class="tab-btn ${cat === currentCategory ? 'active' : ''}"
-                    onclick="switchCategory('${cat}')">
-                    ${cat}
-                </button>`
+        function renderPresets() {
+            document.getElementById('presets').innerHTML = PRESETS.map((p, i) =>
+                `<button class="tab-btn ${i === activePreset ? 'active' : ''}" onclick="applyPreset(${i})">${p.label}</button>`
             ).join('');
         }
 
-        function switchCategory(cat) {
-            currentCategory = cat;
-            elements = ALLOY_FAMILIES[cat];
-            initState();
-            renderTabs();
-            initUI();
-            load3DStructure(cat);
-        }
-
-        // ═══════════════════════════════════════════════
-        // SLIDER UI
-        // ═══════════════════════════════════════════════
         function initUI() {
             container.innerHTML = elements.map(el =>
                 `<div class="slider-group">
                     <div class="slider-header">
                         <div class="el-label">
                             <div class="el-dot" style="background-color: ${el.color}"></div>
-                            ${el.sym} <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 400; margin-left: 4px;">${el.name}</span>
+                            ${el.sym} <span class="el-name">${el.name}</span>
                         </div>
                         <div class="input-group">
-                            <input type="number" id="num-${el.sym}" aria-label="${el.name} percentage input" value="${state[el.sym]}" min="0" max="100">
+                            <input type="number" id="num-${el.sym}" aria-label="${el.name} amount" value="${state[el.sym]}" min="0" max="100" step="0.1">
                             <div class="normalized-val" id="norm-${el.sym}">0.0%</div>
                         </div>
                     </div>
-                    <input type="range" id="range-${el.sym}" aria-label="${el.name} slider" title="${el.name} percentage" value="${state[el.sym]}" min="0" max="100">
+                    <input type="range" id="range-${el.sym}" aria-label="${el.name} slider" value="${state[el.sym]}" min="0" max="100" step="0.1">
                 </div>`
             ).join('');
 
             elements.forEach(el => {
                 const numInput = document.getElementById(`num-${el.sym}`);
                 const rangeInput = document.getElementById(`range-${el.sym}`);
-
                 const update = (val) => {
-                    let parsed = parseInt(val, 10);
-                    if (isNaN(parsed)) parsed = 0;
-                    if (parsed < 0) parsed = 0;
-                    if (parsed > 100) parsed = 100;
-
-                    state[el.sym] = parsed;
-                    numInput.value = parsed;
-                    rangeInput.value = parsed;
+                    let v = Math.round(parseFloat(val) * 10) / 10;
+                    if (isNaN(v) || v < 0) v = 0;
+                    if (v > 100) v = 100;
+                    state[el.sym] = v;
+                    numInput.value = v;
+                    rangeInput.value = v;
+                    if (activePreset !== null) { activePreset = null; renderPresets(); }
                     schedulePredict();
                 };
-
                 numInput.addEventListener('input', e => update(e.target.value));
                 rangeInput.addEventListener('input', e => update(e.target.value));
             });
-
-            predict(); // Initial call
+            predict();
         }
 
         function schedulePredict() {
@@ -929,126 +586,69 @@
             debounceTimer = setTimeout(predict, 300);
         }
 
-        // ═══════════════════════════════════════════════
-        // DONUT CHART
-        // ═══════════════════════════════════════════════
         function updateDonut() {
-            let svgContent = '';
-            let legendContent = '';
-            let cumulative = 0;
-
+            let svg = '', legend = '', cumulative = 0;
             elements.forEach(el => {
                 const pct = resultsComp[el.sym] || 0;
                 if (pct > 0) {
-                    const dasharray = `${pct} 100`;
-                    const dashoffset = -cumulative;
-                    svgContent += `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="${el.color}" stroke-width="6" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}" data-el="${el.sym}" data-pct="${pct.toFixed(1)}" style="cursor:pointer; outline: none;" tabindex="0" role="graphics-symbol" aria-label="${el.sym} composition: ${pct.toFixed(1)}%"></circle>`;
+                    svg += `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="${el.color}" stroke-width="6" stroke-dasharray="${pct} 100" stroke-dashoffset="${-cumulative}" data-el="${el.sym}" data-pct="${pct.toFixed(1)}" style="cursor:pointer; outline: none;" tabindex="0" role="graphics-symbol" aria-label="${el.sym}: ${pct.toFixed(1)}%"></circle>`;
                     cumulative += pct;
-
-                    legendContent +=
-                        `<div class="legend-item">
-                            <div class="el-dot" style="background-color: ${el.color}"></div>
-                            ${el.sym} ${pct.toFixed(1)}%
-                        </div>`;
+                    legend += `<div class="legend-item"><div class="el-dot" style="background-color: ${el.color}"></div>${el.sym} ${pct.toFixed(1)}%</div>`;
                 }
             });
-
-            donutChart.innerHTML = svgContent || `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" stroke="var(--border-subtle)" stroke-width="6"></circle>`;
-            donutLegend.innerHTML = legendContent;
-
-            // Attach hover tooltips to donut segments
+            donutChart.innerHTML = svg || `<circle r="15.91549430918954" cx="16" cy="16" fill="transparent" style="stroke: var(--rule)" stroke-width="6"></circle>`;
+            donutLegend.innerHTML = legend;
             donutChart.querySelectorAll('circle[data-el]').forEach(circle => {
-                const showTooltip = (e) => {
+                const show = (e) => {
                     donutTooltip.textContent = `${circle.dataset.el}: ${circle.dataset.pct}%`;
                     donutTooltip.style.opacity = '1';
-                    if (e.clientX && e.clientY) {
-                        donutTooltip.style.left = (e.clientX + 12) + 'px';
-                        donutTooltip.style.top = (e.clientY - 30) + 'px';
-                    } else {
-                        // Fallback position for keyboard focus
-                        const rect = donutChart.getBoundingClientRect();
-                        donutTooltip.style.left = (rect.left + rect.width / 2) + 'px';
-                        donutTooltip.style.top = (rect.top - 20) + 'px';
-                    }
+                    const rect = donutChart.getBoundingClientRect();
+                    donutTooltip.style.left = ((e.clientX || rect.left + rect.width / 2) + 12) + 'px';
+                    donutTooltip.style.top = ((e.clientY || rect.top) - 30) + 'px';
                 };
-
-                const hideTooltip = () => {
-                    donutTooltip.style.opacity = '0';
-                };
-
-                circle.addEventListener('mouseenter', showTooltip);
-                circle.addEventListener('focus', showTooltip);
-
-                circle.addEventListener('mousemove', (e) => {
-                    donutTooltip.style.left = (e.clientX + 12) + 'px';
-                    donutTooltip.style.top = (e.clientY - 30) + 'px';
-                });
-
-                circle.addEventListener('mouseleave', hideTooltip);
-                circle.addEventListener('blur', hideTooltip);
+                const hide = () => { donutTooltip.style.opacity = '0'; };
+                circle.addEventListener('mouseenter', show);
+                circle.addEventListener('mousemove', show);
+                circle.addEventListener('focus', show);
+                circle.addEventListener('mouseleave', hide);
+                circle.addEventListener('blur', hide);
             });
         }
 
-        // ═══════════════════════════════════════════════
-        // PREDICTION API
-        // ═══════════════════════════════════════════════
+        const DASH = '–';
+        const fmt = (x, d) => (x === undefined || x === null) ? DASH : Number(x).toFixed(d);
+        const range = (iv, d) => iv ? `90% interval: ${fmt(iv[0], d)} to ${fmt(iv[1], d)}` : '';
+
         async function predict() {
             loadingBar.style.opacity = '1';
             try {
-                const payload = {
-                    category: currentCategory,
-                    elements: state
-                };
                 const res = await fetch('/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ category: CATEGORY, elements: state })
                 });
                 const data = await res.json();
-
-                // Animated number transitions
-                const densityEl = document.getElementById('val-density');
-                const strengthEl = document.getElementById('val-strength');
-                const scoreEl = document.getElementById('val-score');
-                const energyTile = document.getElementById('energyTile');
-                const energyEl = document.getElementById('val-energy');
-
-                const oldDensity = parseFloat(densityEl.textContent) || 0;
-                const oldStrength = parseFloat(strengthEl.textContent) || 0;
-                const oldScore = parseFloat(scoreEl.textContent) || 0;
-
-                animateValue(densityEl, oldDensity, data.density, 400, 2);
-                animateValue(strengthEl, oldStrength, data.strength, 400, 2);
-                animateValue(scoreEl, oldScore, data.score, 400, 2);
-                document.getElementById('strength-source').textContent = data.strength_source || '';
-                document.getElementById('strength-warning').textContent = data.coverage_warning || '';
-
-                if (data.energy !== undefined && data.energy !== null) {
-                    energyTile.style.display = 'block';
-                    const oldEnergy = parseFloat(energyEl.textContent) || 0;
-                    animateValue(energyEl, oldEnergy, data.energy, 400, 3);
-                } else {
-                    energyTile.style.display = 'none';
-                }
-
-                // Brief opacity pulse instead of glowing
+                const hasModel = data.strength_1000C !== undefined;
+                document.getElementById('val-rt').textContent = hasModel ? fmt(data.strength, 2) : DASH;
+                document.getElementById('int-rt').textContent = range(data.strength_25C_interval, 2);
+                document.getElementById('val-ht').textContent = hasModel ? fmt(data.strength_1000C, 2) : DASH;
+                document.getElementById('int-ht').textContent = range(data.strength_1000C_interval, 2);
+                document.getElementById('val-density').textContent = data.density ? fmt(data.density, 2) : DASH;
+                document.getElementById('val-score').textContent = hasModel ? fmt(data.score_1000C, 3) : DASH;
+                document.getElementById('int-score').textContent = range(data.score_1000C_interval, 3);
+                const warn = document.getElementById('warnings');
+                warn.textContent = data.coverage_warning || '';
+                warn.hidden = !data.coverage_warning;
                 scoreTile.style.opacity = '0.5';
                 setTimeout(() => { scoreTile.style.opacity = '1'; }, 200);
 
-                resultsComp = data.composition;
-
-                // Update normalized labels
+                resultsComp = data.composition || {};
                 elements.forEach(el => {
-                    const normEl = document.getElementById(`norm-${el.sym}`);
-                    if (normEl) {
-                        normEl.innerText = (resultsComp[el.sym] || 0).toFixed(1) + '%';
-                    }
+                    const n = document.getElementById(`norm-${el.sym}`);
+                    if (n) n.innerText = (resultsComp[el.sym] || 0).toFixed(1) + '%';
                 });
-
                 updateDonut();
-                if (viewerMode === 'live') {
-                    update3DLattice(resultsComp);
-                }
+                update3DLattice(resultsComp);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -1056,188 +656,84 @@
             }
         }
 
-        // ═══════════════════════════════════════════════
-        // 3D SQS CRYSTAL STRUCTURE VIEWER (3Dmol.js)
-        // ═══════════════════════════════════════════════
+        // 3D view: atom positions from a BCC supercell file, species filled in from the composition
         let viewer3d = null;
         let isSpinning = true;
         let baseCifHeader = '';
         let baseCifSites = [];
-        let currentRawCif = '';
-        let viewerMode = 'live'; // 'live' or 'optimal'
 
         function toggleSpin() {
             if (!viewer3d) return;
             isSpinning = !isSpinning;
             viewer3d.spin(isSpinning);
-            const btn = document.getElementById('toggleSpinBtn');
-            if (btn) btn.textContent = `Auto-rotate: ${isSpinning ? 'On' : 'Off'}`;
-        }
-
-        function setViewerMode(mode) {
-            viewerMode = mode;
-            const btnLive = document.getElementById('modeBtnLive');
-            const btnOpt = document.getElementById('modeBtnOptimal');
-            if (btnLive && btnOpt) {
-                if (mode === 'live') {
-                    btnLive.classList.add('viewer-mode-btn--active');
-                    btnOpt.classList.remove('viewer-mode-btn--active');
-                    update3DLattice(resultsComp);
-                } else {
-                    btnOpt.classList.add('viewer-mode-btn--active');
-                    btnLive.classList.remove('viewer-mode-btn--active');
-                    renderCifInViewer(currentRawCif);
-                    const occEl = document.getElementById('latticeOccupancyText');
-                    if (occEl) occEl.textContent = `Optimal SQS (${baseCifSites.length} sites): CHGNet Annealed`;
-                }
-            }
+            document.getElementById('toggleSpinBtn').textContent = `Auto-rotate: ${isSpinning ? 'On' : 'Off'}`;
         }
 
         function parseBaseCif(cifText) {
-            currentRawCif = cifText;
             const lines = cifText.split('\n');
-            let occIdx = -1;
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].trim().startsWith('_atom_site_occupancy')) {
-                    occIdx = i;
-                    break;
-                }
-            }
-            if (occIdx === -1) {
-                baseCifHeader = '';
-                baseCifSites = [];
-                return;
-            }
+            const occIdx = lines.findIndex(l => l.trim().startsWith('_atom_site_occupancy'));
+            if (occIdx === -1) return;
             baseCifHeader = lines.slice(0, occIdx + 1).join('\n') + '\n';
-            baseCifSites = [];
-            for (let i = occIdx + 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                const parts = line.split(/\s+/);
-                if (parts.length >= 7) {
-                    baseCifSites.push({
-                        fx: parts[3],
-                        fy: parts[4],
-                        fz: parts[5]
-                    });
-                }
-            }
+            baseCifSites = lines.slice(occIdx + 1).map(l => l.trim().split(/\s+/)).filter(p => p.length >= 7)
+                .map(p => ({ fx: p[3], fy: p[4], fz: p[5] }));
         }
 
         function update3DLattice(comp) {
-            if (!viewer3d || !baseCifSites.length || viewerMode !== 'live') return;
-            if (!comp || Object.keys(comp).length === 0) return;
-
-            const totalSites = baseCifSites.length;
-            let counts = {};
-            let totalAssigned = 0;
-            let remainders = [];
-
+            if (!viewer3d || !baseCifSites.length || !comp || !Object.keys(comp).length) return;
+            const total = baseCifSites.length;
+            const counts = {};
+            let assigned = 0;
+            const rem = [];
             elements.forEach(el => {
-                const pct = comp[el.sym] || 0;
-                const raw = (pct / 100) * totalSites;
-                const count = Math.floor(raw);
-                counts[el.sym] = count;
-                totalAssigned += count;
-                remainders.push({ sym: el.sym, rem: raw - count });
+                const raw = ((comp[el.sym] || 0) / 100) * total;
+                counts[el.sym] = Math.floor(raw);
+                assigned += counts[el.sym];
+                rem.push({ sym: el.sym, r: raw - counts[el.sym] });
             });
+            rem.sort((a, b) => b.r - a.r);
+            for (let i = 0; assigned < total && rem.length; i++, assigned++) counts[rem[i % rem.length].sym]++;
 
-            remainders.sort((a, b) => b.rem - a.rem);
-            let remIdx = 0;
-            while (totalAssigned < totalSites && remainders.length > 0) {
-                counts[remainders[remIdx % remainders.length].sym]++;
-                totalAssigned++;
-                remIdx++;
-            }
-
-            // Stride permutation (stride 17 is coprime to both 54 and 48) for uniform quasi-random lattice dispersion
-            const siteSpecies = new Array(totalSites);
-            let permIdx = 0;
-            let occupancyTokens = [];
+            // Stride 17 is coprime to 54, so it spreads each element across the cell
+            const species = new Array(total);
+            let k = 0;
+            const tokens = [];
             elements.forEach(el => {
                 const c = counts[el.sym] || 0;
-                if (c > 0) occupancyTokens.push(`${c} ${el.sym}`);
-                for (let i = 0; i < c; i++) {
-                    const siteIdx = (permIdx * 17) % totalSites;
-                    siteSpecies[siteIdx] = el.sym;
-                    permIdx++;
-                }
+                if (c > 0) tokens.push(`${c} ${el.sym}`);
+                for (let i = 0; i < c; i++, k++) species[(k * 17) % total] = el.sym;
             });
-
-            const occEl = document.getElementById('latticeOccupancyText');
-            if (occEl) {
-                occEl.textContent = `Sites (${totalSites}): ${occupancyTokens.join(' · ')}`;
+            document.getElementById('latticeOccupancyText').textContent = `${total} sites: ${tokens.join(' · ')}`;
+            let sites = '';
+            for (let j = 0; j < total; j++) {
+                const s = baseCifSites[j], sym = species[j] || elements[0].sym;
+                sites += `  ${sym}0+  ${sym}${j}  1  ${s.fx}  ${s.fy}  ${s.fz}  1\n`;
             }
-
-            // Construct updated CIF
-            let cifSitesString = '';
-            for (let k = 0; k < totalSites; k++) {
-                const sym = siteSpecies[k] || elements[0].sym;
-                const s = baseCifSites[k];
-                cifSitesString += `  ${sym}0+  ${sym}${k}  1  ${s.fx}  ${s.fy}  ${s.fz}  1\n`;
-            }
-
-            const dynamicCif = baseCifHeader + cifSitesString;
-            renderCifInViewer(dynamicCif);
-        }
-
-        function renderCifInViewer(cifData) {
-            if (!viewer3d || !cifData) return;
             viewer3d.clear();
-            viewer3d.addModel(cifData, "cif");
-            viewer3d.setStyle({}, { 
-                sphere: { scale: 0.38, colorscheme: 'Jmol' }, 
-                stick: { radius: 0.10, colorscheme: 'Jmol' } 
-            });
+            viewer3d.addModel(baseCifHeader + sites, 'cif');
+            viewer3d.setStyle({}, { sphere: { scale: 0.38, colorscheme: 'Jmol' }, stick: { radius: 0.10, colorscheme: 'Jmol' } });
             viewer3d.zoomTo();
             viewer3d.render();
             if (isSpinning) viewer3d.spin(true);
         }
 
-        async function load3DStructure(category) {
+        async function loadLattice() {
             const viewerDiv = document.getElementById('crystalViewer');
-            if (!viewerDiv) return;
-
-            if (typeof $3Dmol === 'undefined') {
-                viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Initializing 3D WebGL engine...</div>`;
-                setTimeout(() => load3DStructure(category), 250);
-                return;
-            }
-
+            if (typeof $3Dmol === 'undefined') { setTimeout(loadLattice, 250); return; }
             try {
-                const res = await fetch(`/structures/${encodeURIComponent(category)}`);
-                if (!res.ok) {
-                    viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Structure blueprint rendering...</div>`;
-                    return;
-                }
-                const cifData = await res.text();
-                parseBaseCif(cifData);
-
-                if (!viewer3d) {
-                    viewerDiv.innerHTML = '';
-                    viewer3d = $3Dmol.createViewer(viewerDiv, { backgroundColor: '#07070a' });
-                }
-
-                if (viewerMode === 'live' && resultsComp && Object.keys(resultsComp).length > 0) {
-                    update3DLattice(resultsComp);
-                } else {
-                    renderCifInViewer(cifData);
-                    const occEl = document.getElementById('latticeOccupancyText');
-                    if (occEl) occEl.textContent = `Optimal SQS (${baseCifSites.length} sites): CHGNet Annealed`;
-                }
+                const res = await fetch(`/structures/${encodeURIComponent(CATEGORY)}`);
+                if (!res.ok) { viewerDiv.textContent = 'Lattice view unavailable.'; return; }
+                parseBaseCif(await res.text());
+                // Transparent canvas, so the glass panel shows through behind the atoms
+                viewer3d = $3Dmol.createViewer(viewerDiv, { backgroundColor: 'black', backgroundAlpha: 0 });
+                viewer3d.setBackgroundColor(0x000000, 0);
+                update3DLattice(resultsComp);
             } catch (e) {
-                console.warn("3D structure display note:", e);
-                viewerDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem;">Blueprint loaded</div>`;
+                viewerDiv.textContent = 'Lattice view unavailable.';
             }
         }
 
-        // ═══════════════════════════════════════════════
-        // BOOT SEQUENCE
-        // ═══════════════════════════════════════════════
-        initState();
-        renderTabs();
-        initUI();
-        load3DStructure(currentCategory);
+        applyPreset(0);
+        loadLattice();
     </script>
 </body>
 
