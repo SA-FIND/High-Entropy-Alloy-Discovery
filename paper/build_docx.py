@@ -1,5 +1,5 @@
 """
-Build the submission Word file and PDF from paper/manuscript_v2.md.
+Build the submission Word file and PDF from paper/manuscript_v2.md, which stays local until publication.
 
 Figures are embedded after the paragraph that first cites them, with their captions; the
 caption list stays at the end as Elsevier asks. Line numbers and page numbers are added.

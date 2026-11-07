@@ -89,7 +89,7 @@ except Exception as e:
     logger.warning(f"Measured strength model not loaded, using proxy models: {e}")
 
 # Refractory hybrid (edge-dislocation theory + ML residual, 90% intervals); see
-# scripts/export_web_model.py and paper/manuscript_v2.md.
+# scripts/export_web_model.py.
 refractory_hybrid = None
 try:
     from refractory_hybrid import RefractoryHybrid

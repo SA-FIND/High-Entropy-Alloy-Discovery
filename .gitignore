@@ -66,3 +66,6 @@ run_master_err.txt
 
 # Empty stderr captures from long runs
 results/*_err.txt
+
+# Manuscript: kept local until publication
+paper/manuscript*.md
